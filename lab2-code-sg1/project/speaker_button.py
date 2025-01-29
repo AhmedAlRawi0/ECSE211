@@ -33,6 +33,4 @@ def play_sound_on_button_press():
 
 if __name__=='__main__':
     play_sound()
-
-    # TODO Implement this function
     play_sound_on_button_press()
