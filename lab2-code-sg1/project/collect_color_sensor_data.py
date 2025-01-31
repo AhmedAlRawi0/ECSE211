@@ -23,6 +23,9 @@ def collect_color_sensor_data():
     try:
         output_file = open(COLOR_SENSOR_DATA_FILE, "w")
         output_file.write("R,G,B\n")  # Write CSV header
+        
+        while not TOUCH_SENSOR.is_pressed():
+            pass  # Wait for the first button press
 
         print("Waiting for the first touch sensor press to start data collection.")
         while true :
@@ -36,8 +39,8 @@ def collect_color_sensor_data():
                 while TOUCH_SENSOR.is_pressed():
                         pass  # Debounce to prevent duplicate readings
 
-    except BaseException: # capture all exceptions including KeyboardInterrupt (Ctrl-C)
-        pass 
+    #except BaseException: # capture all exceptions including KeyboardInterrupt (Ctrl-C)
+       # pass 
     finally:
         print("Done collecting RGB data.")
         output_file.close()  # Close the file
