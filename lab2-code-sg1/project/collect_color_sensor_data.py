@@ -34,13 +34,13 @@ def collect_color_sensor_data():
         while True :
             sleep(0.01)
             r, g, b = COLOR_SENSOR.get_rgb()
-            #if TOUCH_SENSOR.is_pressed():
+            if TOUCH_SENSOR.is_pressed():
                 # Read RGB data from the color sensor
                 print(f"RGB: {r}, {g}, {b}") # to keep track of the data in the console
                 output_file.write(f"{r},{g},{b}\n")  # Write RGB to file
                 #sleep(1)  # Small delay to avoid accidental double presses
-               # while TOUCH_SENSOR.is_pressed():
-                     #   pass  # Debounce to prevent duplicate readings
+                while TOUCH_SENSOR.is_pressed():
+                        pass  # Debounce to prevent duplicate readings
 
     except BaseException: # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         pass 
