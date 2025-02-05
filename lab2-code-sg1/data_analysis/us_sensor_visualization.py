@@ -9,8 +9,9 @@ as explained in the README.md file.
 """
 
 from matplotlib import pyplot as plt
+from sys import argv
 
-US_SENSOR_DATA_FILE = "us_sensor_30.csv"
+US_SENSOR_DATA_FILE = argv[1]
 DELAY_SEC = 0.01
 
 with open(US_SENSOR_DATA_FILE, "r") as f:
@@ -23,4 +24,5 @@ plt.plot(times, distances)
 plt.xlabel("Time (s)")
 plt.ylabel("Distance (cm)")
 plt.yticks([d for d in range(round(max(distances)) + 10) if d % 10 == 0])
-plt.show()
+save_file = argv[1].split('.')[0] + ".png"
+plt.savefig(save_file)
