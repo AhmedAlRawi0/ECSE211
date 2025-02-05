@@ -29,7 +29,7 @@ def main() -> None:
             elif distance < 30:
                 C4.play()
                 C4.wait_done()
-            else
+            else:
                 D4.play()
                 D4.wait_done()
 
