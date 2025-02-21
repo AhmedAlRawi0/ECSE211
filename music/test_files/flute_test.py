@@ -10,10 +10,10 @@ PLAY_BUTTON = TouchSensor(1)
 STOP_BUTTON = TouchSensor(3)
 
 # Define sound notes
-A4 = Sound(duration=0.3, pitch="A4", volume=80)
-B4 = Sound(duration=0.3, pitch="B4", volume=80)
 C4 = Sound(duration=0.3, pitch="C4", volume=80)
 D4 = Sound(duration=0.3, pitch="D4", volume=80)
+E4 = Sound(duration=0.3, pitch="E4", volume=80)
+F4 = Sound(duration=0.3, pitch="F4", volume=80)
 
 def main() -> None:
     wait_ready_sensors(True)
@@ -28,21 +28,21 @@ def main() -> None:
                 distance = US_SENSOR.get_value()
 
                 if distance < 10:
-                    A4.play()
-                    output_file.write(f"{distance}, A4\n")
-                    A4.wait_done()
-                elif distance < 20:
-                    B4.play()
-                    output_file.write(f"{distance}, B4\n")
-                    B4.wait_done()
-                elif distance < 30:
                     C4.play()
-                    output_file.write(f"{distance}, C4\n")
+                    output_file.write(f"{distance}, A4\n")
                     C4.wait_done()
-                else:
+                elif distance < 20:
                     D4.play()
-                    output_file.write(f"{distance}, D4\n")
+                    output_file.write(f"{distance}, B4\n")
                     D4.wait_done()
+                elif distance < 30:
+                    E4.play()
+                    output_file.write(f"{distance}, C4\n")
+                    E4.wait_done()
+                elif distance < 50:
+                    F4.play()
+                    output_file.write(f"{distance}, D4\n")
+                    F4.wait_done()
 
     print("Test completed. Data saved in Flute_test.csv.")
 
