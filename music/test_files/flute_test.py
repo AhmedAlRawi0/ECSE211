@@ -27,7 +27,7 @@ def main() -> None:
             if PLAY_BUTTON.is_pressed():
                 distance = US_SENSOR.get_value()
 
-                if distance < 10:
+                if 1 <= distance < 10:
                     C4.play()
                     output_file.write(f"{distance}, C4\n")
                     C4.wait_done()
@@ -39,7 +39,7 @@ def main() -> None:
                     E4.play()
                     output_file.write(f"{distance}, E4\n")
                     E4.wait_done()
-                elif distance < 50:
+                elif distance <= 50:
                     F4.play()
                     output_file.write(f"{distance}, F4\n")
                     F4.wait_done()
