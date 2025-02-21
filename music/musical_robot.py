@@ -29,13 +29,13 @@ def play_flute():
         if distance is None:
             continue  # Ignore invalid readings
 
-        if distance < 5:
+        if 1 <= distance < 10:
             NOTE_C.play()
-        elif 5 <= distance < 10:
-            NOTE_D.play()
         elif 10 <= distance < 20:
+            NOTE_D.play()
+        elif 20 <= distance < 30:
             NOTE_E.play()
-        elif distance >= 30:
+        elif 30 <= distance <= 50:
             NOTE_F.play()
 
         sleep(0.5)  # Small delay to allow smooth transitions, can be tweaked to our liking

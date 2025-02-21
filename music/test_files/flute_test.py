@@ -29,19 +29,19 @@ def main() -> None:
 
                 if distance < 10:
                     C4.play()
-                    output_file.write(f"{distance}, A4\n")
+                    output_file.write(f"{distance}, C4\n")
                     C4.wait_done()
                 elif distance < 20:
                     D4.play()
-                    output_file.write(f"{distance}, B4\n")
+                    output_file.write(f"{distance}, D4\n")
                     D4.wait_done()
                 elif distance < 30:
                     E4.play()
-                    output_file.write(f"{distance}, C4\n")
+                    output_file.write(f"{distance}, E4\n")
                     E4.wait_done()
                 elif distance < 50:
                     F4.play()
-                    output_file.write(f"{distance}, D4\n")
+                    output_file.write(f"{distance}, F4\n")
                     F4.wait_done()
 
     print("Test completed. Data saved in Flute_test.csv.")

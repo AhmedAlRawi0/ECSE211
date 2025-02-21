@@ -24,35 +24,34 @@ stop_signal = False
 def play_flute():
     """Continuously reads ultrasonic sensor values and plays notes."""
     global stop_signal
+    
     output_file = open("integration_test.csv", "w")
     output_file.write("Distance (cm), Note Played\n")  # CSV Header
-    
     while not stop_signal:
         distance = US_SENSOR.get_value()
         if distance is None:
             continue  # Ignore invalid readings
 
-        if distance < 5:
+        if 1 < distance < 10:
             NOTE_C.play()
             output_file.write(f"{distance}, C4\n")
             output_file.flush()
-        elif 5 <= distance < 10:
+        elif 10 <= distance and distance < 20:
             NOTE_D.play()
             output_file.write(f"{distance}, D4\n")
             output_file.flush()
-        elif 10 <= distance < 20:
+        elif 20 <= distance and distance < 30:
             NOTE_E.play()
             output_file.write(f"{distance}, E4\n")
             output_file.flush()
-        elif distance >= 30:
+        elif 30 <= distance and distance <= 50:
             NOTE_F.play()
             output_file.write(f"{distance}, F4\n")
             output_file.flush()
 
         sleep(0.5)  # Small delay to allow smooth transitions, can be tweaked to our liking
-        
     output_file.close()
-
+        
 
 def play_drum():
     """Controls the drumming motor."""
@@ -107,6 +106,6 @@ if __name__ == "__main__":
     stop_thread.join()  # Main thread waits for stop
     flute_thread.join()  # Ensure flute stops
     drum_thread.join()  # Ensure drum stops
-
+    
     print("System shut down.")
 
