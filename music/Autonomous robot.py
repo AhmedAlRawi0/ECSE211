@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
-
 import threading
 from time import sleep
 from utils.brick import EV3ColorSensor, EV3UltrasonicSensor, Motor, TouchSensor, wait_ready_sensors, reset_brick
 
-# Initialize sensors and motors (ports to be assigned later)
+# Initialize sensors and motors
 COLOR_SENSOR = EV3ColorSensor("3")  # Detects fire (red color)
 ULTRASONIC_SENSOR = EV3UltrasonicSensor("2")  # Detects obstacles
 EMERGENCY_STOP = TouchSensor("1")  # Stops everything immediately
@@ -13,27 +11,35 @@ LEFT_MOTOR = Motor("D")  # Left wheel motor
 RIGHT_MOTOR = Motor("A")  # Right wheel motor
 DUMP_MOTOR = Motor("C")  # Medium motor to drop sandbag
 
-# Global stop signal
+# Global control variables
 stop_signal = False
+robot_moving = True  # Track if the robot should move
 
 
-def move_forward():
-    """Moves the robot forward."""
+def control_movement():
+    """Controls the movement of the robot based on the state."""
+    global robot_moving
+
     while not stop_signal:
-        LEFT_MOTOR.set_power(50)
-        RIGHT_MOTOR.set_power(50)
-        sleep(0.1)
+        if robot_moving:
+            LEFT_MOTOR.set_power(50)
+            RIGHT_MOTOR.set_power(50)
+        else:
+            LEFT_MOTOR.set_power(0)
+            RIGHT_MOTOR.set_power(0)
+        sleep(0.1)  # Small delay to avoid excessive CPU usage
 
 
 def check_obstacles():
     """Stops the motors if an obstacle is within 10 cm."""
-    global stop_signal
+    global robot_moving
     while not stop_signal:
         distance = ULTRASONIC_SENSOR.get_value()
         if distance is not None and distance <= 10:
             print("Obstacle detected! Stopping.")
-            LEFT_MOTOR.set_power(0)
-            RIGHT_MOTOR.set_power(0)
+            robot_moving = False  # Stop the robot
+        else:
+            robot_moving = True  # Resume movement when clear
         sleep(0.1)
 
 
@@ -67,10 +73,9 @@ def emergency_stop():
 if __name__ == "__main__":
     wait_ready_sensors(True)
     print("Firefighter Rescue Robot Initialized.")
-    print("Moving forward, detecting fire and obstacles.")
 
     # Start parallel tasks
-    move_thread = threading.Thread(target=move_forward)
+    move_thread = threading.Thread(target=control_movement)
     obstacle_thread = threading.Thread(target=check_obstacles)
     fire_thread = threading.Thread(target=detect_fire)
     stop_thread = threading.Thread(target=emergency_stop)
