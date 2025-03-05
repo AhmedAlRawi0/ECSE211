@@ -1,37 +1,89 @@
 #!/usr/bin/env python3
 
-from utils.sound import Sound
-from utils.brick import TouchSensor, EV3UltrasonicSensor, wait_ready_sensors, reset_brick
+import threading
 from time import sleep
+from utils.brick import EV3ColorSensor, EV3UltrasonicSensor, Motor, TouchSensor, wait_ready_sensors, reset_brick
 
-US_SENSOR = EV3UltrasonicSensor(2)
-PLAY_BUTTON = TouchSensor(1)
-STOP_BUTTON = TouchSensor(3)
-A4 = Sound(duration=0.3, pitch="A4", volume=80)
-B4 = Sound(duration=0.3, pitch="B4", volume=80)
-C4 = Sound(duration=0.3, pitch="C4", volume=80)
-D4 = Sound(duration=0.3, pitch="D4", volume=80)
+# Initialize sensors and motors (ports to be assigned later)
+COLOR_SENSOR = EV3ColorSensor("3")  # Detects fire (red color)
+ULTRASONIC_SENSOR = EV3UltrasonicSensor("2")  # Detects obstacles
+EMERGENCY_STOP = TouchSensor("1")  # Stops everything immediately
+SECOND_TOUCH = TouchSensor("4")  # Reserved for future functionality
+LEFT_MOTOR = Motor("D")  # Left wheel motor
+RIGHT_MOTOR = Motor("A")  # Right wheel motor
+DUMP_MOTOR = Motor("C")  # Medium motor to drop sandbag
 
-def main() -> None:
-    
-    wait_ready_sensors(True)
-    print("Sensors loaded. You may start playing.")
+# Global stop signal
+stop_signal = False
 
-    while not STOP_BUTTON.is_pressed():
-        if PLAY_BUTTON.is_pressed():
-            distance = US_SENSOR.get_value()
-            if distance < 10:
-                A4.play()
-                A4.wait_done()
-            elif distance < 20:
-                B4.play()
-                B4.wait_done()
-            elif distance < 30:
-                C4.play()
-                C4.wait_done()
-            else:
-                D4.play()
-                D4.wait_done()
+
+def move_forward():
+    """Moves the robot forward."""
+    while not stop_signal:
+        LEFT_MOTOR.set_power(50)
+        RIGHT_MOTOR.set_power(50)
+        sleep(0.1)
+
+
+def check_obstacles():
+    """Stops the motors if an obstacle is within 10 cm."""
+    global stop_signal
+    while not stop_signal:
+        distance = ULTRASONIC_SENSOR.get_value()
+        if distance is not None and distance <= 10:
+            print("Obstacle detected! Stopping.")
+            LEFT_MOTOR.set_power(0)
+            RIGHT_MOTOR.set_power(0)
+        sleep(0.1)
+
+
+def detect_fire():
+    """Activates the dump mechanism if fire (red color) is detected."""
+    while not stop_signal:
+        color = COLOR_SENSOR.get_value()
+        if color == 5:  # Red color code
+            print("Fire detected! Dropping sandbag.")
+            DUMP_MOTOR.set_power(50)
+            sleep(1)
+            DUMP_MOTOR.set_power(0)
+        sleep(0.1)
+
+
+def emergency_stop():
+    """Stops all operations when the emergency button is pressed."""
+    global stop_signal
+    while not stop_signal:
+        if EMERGENCY_STOP.is_pressed():
+            print("Emergency Stop Activated!")
+            stop_signal = True
+            LEFT_MOTOR.set_power(0)
+            RIGHT_MOTOR.set_power(0)
+            DUMP_MOTOR.set_power(0)
+            reset_brick()
+            break
+        sleep(0.1)
+
 
 if __name__ == "__main__":
-    main()
+    wait_ready_sensors(True)
+    print("Firefighter Rescue Robot Initialized.")
+    print("Moving forward, detecting fire and obstacles.")
+
+    # Start parallel tasks
+    move_thread = threading.Thread(target=move_forward)
+    obstacle_thread = threading.Thread(target=check_obstacles)
+    fire_thread = threading.Thread(target=detect_fire)
+    stop_thread = threading.Thread(target=emergency_stop)
+
+    move_thread.start()
+    obstacle_thread.start()
+    fire_thread.start()
+    stop_thread.start()
+
+    # Wait for emergency stop
+    stop_thread.join()
+    move_thread.join()
+    obstacle_thread.join()
+    fire_thread.join()
+
+    print("System shut down.")
