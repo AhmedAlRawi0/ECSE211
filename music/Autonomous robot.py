@@ -44,15 +44,33 @@ def check_obstacles():
 
 
 def detect_fire():
-    """Activates the dump mechanism if fire (red color) is detected."""
+    """Stops the robot and activates the dump mechanism if fire (red color) is detected."""
+    global robot_moving
+
     while not stop_signal:
         color = COLOR_SENSOR.get_value()
-        if color == 5:  # Red color code
-            print("Fire detected! Dropping sandbag.")
-            DUMP_MOTOR.set_power(50)
-            sleep(1)
-            DUMP_MOTOR.set_power(0)
-        sleep(0.1)
+
+        if color is not None:  # Ensure a valid reading
+            print(f"Detected Color: {color}")  # Debugging log
+
+            if color == 5:  # Red detected
+                print("Fire detected! Stopping movement and dropping sandbag.")
+                
+                # Stop the robot
+                robot_moving = False
+                LEFT_MOTOR.set_power(0)
+                RIGHT_MOTOR.set_power(0)
+
+                # Activate dump mechanism
+                DUMP_MOTOR.set_power(50)
+                sleep(1)
+                DUMP_MOTOR.set_power(0)
+
+                # Resume movement after dropping sandbag
+                robot_moving = True
+
+        sleep(0.2)  # Increase frequency of color detection
+
 
 
 def emergency_stop():
