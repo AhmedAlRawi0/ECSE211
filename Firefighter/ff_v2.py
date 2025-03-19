@@ -51,6 +51,7 @@ def drive_forward(power=50, duration=0.5): # we can change this
     """Drive both motors forward for a specified duration."""
     if stop_signal:
         return
+    # TODO: use set_position_relative and calculate angle dynamically from distance
     LEFT_MOTOR.set_power(power)
     RIGHT_MOTOR.set_power(power)
     time.sleep(duration)
@@ -61,6 +62,7 @@ def turn_right_90():
     """Perform an approximate 90° right turn using differential drive."""
     if stop_signal:
         return
+    # TODO: find correct angle to rotate robot by 90deg
     LEFT_MOTOR.set_position_relative(500)
     RIGHT_MOTOR.set_position_relative(-500)
 
@@ -68,6 +70,7 @@ def turn_left_90():
     """Perform an approximate 90° left turn using differential drive."""
     if stop_signal:
         return
+    # TODO: find correct angle to rotate robot by 90deg
     LEFT_MOTOR.set_position_relative(-500)
     RIGHT_MOTOR.set_position_relative(500)
 
