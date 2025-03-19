@@ -76,6 +76,23 @@ def turn_left_90():
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
     
+# ----------------------------
+# Emergency Stop Monitor (Threaded)
+# ----------------------------
+def monitor_emergency_stop():
+    """Continuously check the emergency stop sensor."""
+    global stop_signal
+    while not stop_signal:
+        if EMERGENCY_STOP.is_pressed():
+            print("Emergency Stop Activated!")
+            stop_signal = True
+            LEFT_MOTOR.set_power(0)
+            RIGHT_MOTOR.set_power(0)
+            FIRE_SUPPRESSION_MOTOR.set_power(0)
+            reset_brick()  # Reset sensors and actuators
+            break
+        time.sleep(0.1)
+        
 ################################
 
 def navigate_to_fire_room():
@@ -136,3 +153,37 @@ def navigate_to_fire_room():
             break
         time.sleep(0.1)
     in_fire_room = True  # Signal that the fire room has been reached
+
+# ----------------------------
+# Main Mission Sequence
+# ----------------------------
+def main_mission():
+    global stop_signal
+    mission_start = time.time()
+
+    # Start the siren (runs until the fire room is reached)
+    siren_thread = threading.Thread(target=play_siren)
+    siren_thread.start()
+
+    # Navigate from base to the fire room
+    navigate_to_fire_room()
+    print("Fire room reached. Stopping siren.")
+
+# ----------------------------
+# Main Execution
+# ----------------------------
+if __name__ == "__main__":
+    wait_ready_sensors(True)
+    print("Firefighter Rescue Robot Initialized.")
+    print("Starting mission...")
+
+    # Start emergency stop monitor thread
+    emergency_thread = threading.Thread(target=monitor_emergency_stop)
+    emergency_thread.start()
+
+    # Run the main mission sequence
+    main_mission()
+
+    # Wait for the emergency stop thread to finish (if not already)
+    emergency_thread.join()
+    print("System shut down.")
