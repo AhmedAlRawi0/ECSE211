@@ -61,21 +61,15 @@ def turn_right_90():
     """Perform an approximate 90° right turn using differential drive."""
     if stop_signal:
         return
-    LEFT_MOTOR.set_power(50)
-    RIGHT_MOTOR.set_power(-50)
-    time.sleep(0.8)  # we can change this
-    LEFT_MOTOR.set_power(0)
-    RIGHT_MOTOR.set_power(0)
+    LEFT_MOTOR.set_position_relative(500)
+    RIGHT_MOTOR.set_position_relative(-500)
 
 def turn_left_90():
     """Perform an approximate 90° left turn using differential drive."""
     if stop_signal:
         return
-    LEFT_MOTOR.set_power(-50)
-    RIGHT_MOTOR.set_power(50)
-    time.sleep(0.8)
-    LEFT_MOTOR.set_power(0)
-    RIGHT_MOTOR.set_power(0)
+    LEFT_MOTOR.set_position_relative(-500)
+    RIGHT_MOTOR.set_position_relative(500)
 
 # ----------------------------
 # Siren Playback (Threaded)
