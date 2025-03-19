@@ -63,16 +63,16 @@ def turn_right_90():
     if stop_signal:
         return
     # TODO: find correct angle to rotate robot by 90deg
-    LEFT_MOTOR.set_position_relative(500)
-    RIGHT_MOTOR.set_position_relative(-500)
+    LEFT_MOTOR.set_position_relative(169)
+    RIGHT_MOTOR.set_position_relative(-169)
 
 def turn_left_90():
     """Perform an approximate 90° left turn using differential drive."""
     if stop_signal:
         return
     # TODO: find correct angle to rotate robot by 90deg
-    LEFT_MOTOR.set_position_relative(-500)
-    RIGHT_MOTOR.set_position_relative(500)
+    LEFT_MOTOR.set_position_relative(-169)
+    RIGHT_MOTOR.set_position_relative(169)
 
 # ----------------------------
 # Siren Playback (Threaded)
