@@ -68,6 +68,8 @@ def drop_sandbag():
     print("🪣 Dropping sandbag on fire...")
     FIRE_SUPPRESSION_MOTOR.set_power(50)
     time.sleep(1)  # Time to drop the sandbag
+    FIRE_SUPPRESSION_MOTOR.set_power(-50)
+    time.sleep(1)  # Time to drop the sandbag
     FIRE_SUPPRESSION_MOTOR.set_power(0)
     print("Sandbag deployed.")
 

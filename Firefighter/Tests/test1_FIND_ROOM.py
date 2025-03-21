@@ -120,7 +120,7 @@ def navigate_to_fire_room():
             time.sleep(0.3)  # debounce to avoid multiple counts
         # Also check if the ultrasonic sensor reads 55 cm or more (wall reached)
         distance = ULTRASONIC_SENSOR.get_cm()
-        if distance is not None and distance >= 55:
+        if distance is not None and distance <= 55:
             print("Reached 55 cm from wall")
             break
 
