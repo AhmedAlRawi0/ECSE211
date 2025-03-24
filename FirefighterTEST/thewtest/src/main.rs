@@ -1,7 +1,7 @@
 use std::{thread, time::Duration};
 
 use anyhow::{anyhow, bail};
-use brickpi3::{BrickPi3, MotorPort, SensorData, SensorError, SensorPort, SensorType};
+use brickpi3::{BrickPi3, MotorPort, SensorData, SensorPort, SensorType};
 
 fn main() -> anyhow::Result<()> {
     let mut brickpi = BrickPi3::open("/dev/spidev0.1")?;
@@ -31,8 +31,8 @@ fn main() -> anyhow::Result<()> {
             println!("Cancelled.");
             break;
         }
-        if brickpi.read_motor_encoder(MotorPort::PortA) - enc_pos_left > 179
-            || brickpi.read_motor_encoder(MotorPort::PortB) - enc_pos_right < -179
+        if brickpi.read_motor_encoder(MotorPort::PortA)? - enc_pos_left > 179
+            || brickpi.read_motor_encoder(MotorPort::PortB)? - enc_pos_right < -179
         {
             println!("Rotation complete!");
             break;
