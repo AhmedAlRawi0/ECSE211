@@ -16,7 +16,7 @@ fn main() -> anyhow::Result<()> {
     loop {
         let SensorData::Touch { pressed } = brickpi
             .read_sensor(SensorPort::Port3)
-            .map_err(|e| anyhow!("{e:#}"))?
+            .map_err(|e| anyhow!("{e:?}"))?
         else {
             bail!("invalid sensor data")
         };
