@@ -13,16 +13,19 @@ fn main() -> anyhow::Result<()> {
     println!("done.");
 
     brickpi.set_motor_power(MotorPort::PortA, 20)?;
+    thread::sleep(Duration::from_millis(50));
     brickpi.set_motor_power(MotorPort::PortB, 20)?;
 
     thread::sleep(Duration::from_millis(500));
 
     brickpi.set_motor_power(MotorPort::PortA, 0)?;
+    thread::sleep(Duration::from_millis(50));
     brickpi.set_motor_power(MotorPort::PortB, 0)?;
 
     thread::sleep(Duration::from_millis(500));
 
     brickpi.set_motor_position_relative(MotorPort::PortA, 179)?;
+    thread::sleep(Duration::from_millis(50));
     brickpi.set_motor_position_relative(MotorPort::PortB, -179)?;
 
     loop {
@@ -36,10 +39,13 @@ fn main() -> anyhow::Result<()> {
             println!("Cancelled.");
             break;
         }
+        thread::sleep(Duration::from_millis(50));
     }
 
     brickpi.set_motor_power(MotorPort::PortA, 0)?;
+    thread::sleep(Duration::from_millis(50));
     brickpi.set_motor_power(MotorPort::PortB, 0)?;
+    thread::sleep(Duration::from_millis(50));
 
     println!("Hello, BrickPi!");
 
