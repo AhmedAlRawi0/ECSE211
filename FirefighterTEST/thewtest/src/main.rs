@@ -1,4 +1,5 @@
-use brickpi3::{BrickPi3, MotorPort, SensorError, SensorPort, SensorType};
+use anyhow::{anyhow, bail};
+use brickpi3::{BrickPi3, MotorPort, SensorData, SensorError, SensorPort, SensorType};
 
 fn main() -> anyhow::Result<()> {
     let mut brickpi = BrickPi3::open("/dev/spidev0.1")?;
@@ -6,7 +7,7 @@ fn main() -> anyhow::Result<()> {
     brickpi.set_sensor_type(SensorPort::Port3, SensorType::Touch, 0)?;
 
     print!("Configuring sensors... ");
-    while brickpi.read_sensor(SensorPort::Port3) == Err(SensorError::NotConfigured) {}
+    while let Err(SensorError::NotConfigured) = brickpi.read_sensor(SensorPort::Port3) {}
     println!("done.");
 
     brickpi.set_motor_position_relative(MotorPort::PortA, 179)?;
