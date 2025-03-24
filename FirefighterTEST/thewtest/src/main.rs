@@ -39,14 +39,14 @@ fn main() -> anyhow::Result<()> {
         {
             brickpi.set_motor_power(
                 MotorPort::PortA,
-                ((enc_new_pos_left - enc_pos_left) - 337) as i8 / 2,
+                ((enc_new_pos_left - enc_pos_left) - 337) as i8 / -2,
             )?;
             brickpi.set_motor_power(
                 MotorPort::PortB,
-                ((enc_new_pos_right - enc_pos_right) + 337) as i8 / 2,
+                ((enc_new_pos_right - enc_pos_right) + 337) as i8 / -2,
             )?;
 
-            if enc_new_pos_left - enc_pos_left > 337 || enc_new_pos_right - enc_pos_right < -337 {
+            if enc_new_pos_left - enc_pos_left > 336 || enc_new_pos_right - enc_pos_right < -336 {
                 println!("Rotation complete!");
                 break;
             }
