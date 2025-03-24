@@ -10,6 +10,12 @@ fn main() -> anyhow::Result<()> {
     while let Err(SensorError::NotConfigured) = brickpi.read_sensor(SensorPort::Port4) {}
     println!("done.");
 
+    brickpi.set_motor_power(MotorPort::PortA, 10)?;
+    brickpi.set_motor_power(MotorPort::PortB, 10)?;
+
+    brickpi.set_motor_power(MotorPort::PortA, 0)?;
+    brickpi.set_motor_power(MotorPort::PortB, 0)?;
+
     brickpi.set_motor_position_relative(MotorPort::PortA, 179)?;
     brickpi.set_motor_position_relative(MotorPort::PortB, -179)?;
 
