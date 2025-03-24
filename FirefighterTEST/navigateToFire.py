@@ -16,12 +16,17 @@ stop_signal = False
 # Emergency stop button
 EMERGENCY_STOP = TouchSensor(4)
 # Ultrasonic sensor for distance detection
-ULTRASONIC_SENSOR = EV3UltrasonicSensor(1, mode="cm")
+ULTRASONIC_SENSOR = EV3UltrasonicSensor(3, mode="cm") #could be three i am not sure
+ULTRASONIC_SENSOR_LEFT = EV3UltrasonicSensor(1, mode="cm")
 # Driving motors
 LEFT_MOTOR = Motor("A")
 RIGHT_MOTOR = Motor("B")
+COLOUR_MOTOR = Motor("C") #no function for this... we need to find a solution
 # Siren sound
 siren_sound = Sound(duration=0.5, pitch="C4", volume=100)
+
+#Colour sensor
+COLOUR_SENSOR = EV3ColorSensor(2)
 
 # ----------------------------
 # Helper Functions for Driving
