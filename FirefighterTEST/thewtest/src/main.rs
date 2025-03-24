@@ -31,8 +31,8 @@ fn main() -> anyhow::Result<()> {
             println!("Cancelled.");
             break;
         }
-        if brickpi.read_motor_encoder(MotorPort::PortA)? - enc_pos_left > 179
-            || brickpi.read_motor_encoder(MotorPort::PortB)? - enc_pos_right < -179
+        if brickpi.read_motor_encoder(MotorPort::PortA)? - enc_pos_left > 337
+            || brickpi.read_motor_encoder(MotorPort::PortB)? - enc_pos_right < -337
         {
             println!("Rotation complete!");
             break;
