@@ -12,8 +12,8 @@ fn main() -> anyhow::Result<()> {
     while let Err(_) = brickpi.read_sensor(SensorPort::Port4) {}
     println!("done.");
 
-    brickpi.set_motor_power(MotorPort::PortA, 10)?;
-    brickpi.set_motor_power(MotorPort::PortB, 10)?;
+    brickpi.set_motor_power(MotorPort::PortA, 20)?;
+    brickpi.set_motor_power(MotorPort::PortB, 20)?;
 
     thread::sleep(Duration::from_millis(500));
 
