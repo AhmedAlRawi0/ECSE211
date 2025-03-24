@@ -31,11 +31,25 @@ fn main() -> anyhow::Result<()> {
             println!("Cancelled.");
             break;
         }
-        if brickpi.read_motor_encoder(MotorPort::PortA)? - enc_pos_left > 337
-            || brickpi.read_motor_encoder(MotorPort::PortB)? - enc_pos_right < -337
+        let enc_new_pos_left = brickpi.read_motor_encoder(MotorPort::PortA)?;
+        let enc_new_pos_right = brickpi.read_motor_encoder(MotorPort::PortB)?;
+
+        if enc_new_pos_left - enc_pos_left > 337 - 30
+            || enc_new_pos_right - enc_pos_right < -337 + 30
         {
-            println!("Rotation complete!");
-            break;
+            brickpi.set_motor_power(
+                MotorPort::PortA,
+                (enc_new_pos_left - enc_pos_left - 337) / 2,
+            )?;
+            brickpi.set_motor_power(
+                MotorPort::PortB,
+                (enc_new_pos_right - enc_pos_right + 337) / 2,
+            )?;
+
+            if enc_new_pos_left - enc_pos_left > 337 || enc_new_pos_right - enc_pos_right < -337 {
+                println!("Rotation complete!");
+                break;
+            }
         }
         thread::sleep(Duration::from_millis(50));
     }
