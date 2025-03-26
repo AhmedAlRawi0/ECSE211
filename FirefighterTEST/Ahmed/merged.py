@@ -276,6 +276,7 @@ def approach_fire():
         drive_forward_with_correction(power=-20, duration=0.4)
         color_val = COLOR_SENSOR.get_value()
         if color_val == 5:  # Red detected
+            #TODO: stop siren
             print("Red color detected. Room on fire confirmed.")
             break
 

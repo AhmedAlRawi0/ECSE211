@@ -61,31 +61,50 @@ def drive_forward_with_correction(power=-20, duration=0.5):
     print(f"Correction applied: {correction} (Left Distance: {distance_left})")
 
 # based on tutorials, we need to check this
+# Constants based on your robot's physical configuration
+RW = 0.021  # Wheel radius in meters (2.1 cm)
+RB = 0.068   # Distance between wheels (wheelbase) in meters (6.8 cm)
+ORIENTTODEG = RB / RW  # Scaling factor for rotation
+
 def turn_right_90():
-    """Turn right exactly 90° using motor rotation (encoders)."""
+    """Accurate 90° right turn using motor encoders and sleep estimation."""
     if stop_signal:
         return
-    LEFT_MOTOR.set_position(0)
-    RIGHT_MOTOR.set_position(0)
-    LEFT_MOTOR.set_dps(200)
-    RIGHT_MOTOR.set_dps(-200)
-    while abs(LEFT_MOTOR.get_position()) < 180 and not stop_signal:
-        time.sleep(0.01)
+
+    angle = 90
+    motor_degrees = int(angle * ORIENTTODEG)
+    degrees_per_second = 180  # You can tune this value
+    estimated_time = abs(motor_degrees) / degrees_per_second
+
+    print(f"Turning right 90° using {motor_degrees} motor degrees, sleeping for {estimated_time:.2f}s")
+
+    LEFT_MOTOR.set_position_relative(motor_degrees)
+    RIGHT_MOTOR.set_position_relative(-motor_degrees)
+    time.sleep(estimated_time)
+
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
 
+
 def turn_left_90():
-    """Turn left exactly 90° using motor rotation (encoders)."""
+    """Accurate 90° left turn using motor encoders and sleep estimation."""
     if stop_signal:
         return
-    LEFT_MOTOR.set_position(0)
-    RIGHT_MOTOR.set_position(0)
-    LEFT_MOTOR.set_dps(-200)
-    RIGHT_MOTOR.set_dps(200)
-    while abs(RIGHT_MOTOR.get_position()) < 180 and not stop_signal:
-        time.sleep(0.01)
+
+    angle = 90
+    motor_degrees = int(angle * ORIENTTODEG)
+    degrees_per_second = 180
+    estimated_time = abs(motor_degrees) / degrees_per_second
+
+    print(f"Turning left 90° using {motor_degrees} motor degrees, sleeping for {estimated_time:.2f}s")
+
+    LEFT_MOTOR.set_position_relative(-motor_degrees)
+    RIGHT_MOTOR.set_position_relative(motor_degrees)
+    time.sleep(estimated_time)
+
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
+
 
 # ----------------------------
 # Threads
