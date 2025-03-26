@@ -34,11 +34,11 @@ fn main() -> anyhow::Result<()> {
         let enc_new_pos_left = brickpi.read_motor_encoder(MotorPort::PortA)?;
         let enc_new_pos_right = brickpi.read_motor_encoder(MotorPort::PortB)?;
 
-        if enc_new_pos_left - enc_pos_left > 317 || enc_new_pos_right - enc_pos_right < -317 {
+        if enc_new_pos_left - enc_pos_left > 300 || enc_new_pos_right - enc_pos_right < -300 {
             brickpi.set_motor_power(MotorPort::PortA, 10)?;
             brickpi.set_motor_power(MotorPort::PortB, -10)?;
 
-            if enc_new_pos_left - enc_pos_left > 336 || enc_new_pos_right - enc_pos_right < -336 {
+            if enc_new_pos_left - enc_pos_left > 310 || enc_new_pos_right - enc_pos_right < -310 {
                 println!("Rotation complete!");
                 break;
             }
