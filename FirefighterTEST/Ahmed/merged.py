@@ -119,7 +119,7 @@ def avoid_blue_sticker(angle):
     print(f"Blue sticker detected at angle {angle}°. Avoiding...")
     LEFT_MOTOR.set_power(-20)
     RIGHT_MOTOR.set_power(-20)
-    time.sleep(0.5)
+    time.sleep(0.3)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
     if angle > 0:
@@ -184,11 +184,11 @@ def scan_and_extinguish_fires():
     global fires_extinguished
     print("Fire scanning started...")
     while fires_extinguished < 2 and not stop_signal:
-        for angle in range(-180, -40, 10):
+        for angle in range(-200, -55, 10):
             if stop_signal:
                 break
             rotate_sensor_to_position(angle, speed=25)
-            time.sleep(0.05)
+            time.sleep(0.03)
             color_val = COLOUR_SENSOR.get_value()
 
             if color_val == 5:
@@ -198,14 +198,39 @@ def scan_and_extinguish_fires():
                 drop_sandbag_with_alignment(angle)
                 fires_extinguished += 1
                 break
-            elif color_val == 6:
-                print(f"Blue detected at {angle}°")
+            elif color_val == 1:
+                print(f"green detected at {angle}°")
                 avoid_blue_sticker(angle)
                 rotate_sensor_to_position(0, speed=50)
                 time.sleep(0.2)
                 break
         time.sleep(0.2)
     print("All required fires extinguished.")
+
+def navigate_inside_fire_room():
+    print("Navigation inside fire room started...")
+    while not stop_signal:
+        drive_forward_with_correction(power=-20, duration=0.5, Ldist=81)
+        front_distance = ULTRASONIC_SENSOR.get_cm()
+        if front_distance is not None and front_distance <= 8:
+            print(f"Wall detected at {front_distance} cm.")
+            break
+
+    time.sleep(0.2)
+    turn_left_90()
+    print("Turned right 90°.")
+
+    while not stop_signal:
+        drive_forward_with_correction(power=-20, duration=0.4, Ldist=110)
+        front_distance = ULTRASONIC_SENSOR.get_cm()
+        if front_distance is not None and front_distance <= 57:
+            print(f"Wall detected at {front_distance} cm.")
+            break
+
+    time.sleep(0.2)
+    turn_left_90()
+    print("Turned left 90°.")
+    print("stop")
 
 # ----------------------------
 # Main Execution
@@ -221,6 +246,7 @@ def main_mission():
     stop_signal = stop_signal or False  # Stop siren once in fire room
     print("Stopping siren.")
     scan_and_extinguish_fires()
+    navigate_inside_fire_room()
 
     stop_signal = True
     emergency_thread.join()
