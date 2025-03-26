@@ -37,11 +37,11 @@ fn main() -> anyhow::Result<()> {
         if enc_new_pos_left - enc_pos_left > 317 || enc_new_pos_right - enc_pos_right < -317 {
             brickpi.set_motor_power(
                 MotorPort::PortA,
-                (enc_new_pos_left - enc_pos_left - 317) as i8,
+                (enc_pos_left - enc_new_pos_left + 337) as i8,
             )?;
             brickpi.set_motor_power(
                 MotorPort::PortB,
-                (enc_new_pos_right - enc_pos_right + 317) as i8,
+                (enc_pos_right - enc_new_pos_right - 337) as i8,
             )?;
 
             if enc_new_pos_left - enc_pos_left > 336 || enc_new_pos_right - enc_pos_right < -336 {
