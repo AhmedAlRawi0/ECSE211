@@ -93,13 +93,13 @@ def drop_sandbag_with_alignment(angle):
     """
     print(f"Aligning robot using sensor angle: {angle}°")
     # Rotate the robot by the sensor offset so that the target is centered.
-    rotate_robot(angle)
+    #rotate_robot(angle)
     # Optionally, add a sensor feedback loop here for fine tuning
     print("🪣 Dropping sandbag on fire...")
-    FIRE_SUPPRESSION_MOTOR.set_power(30)
-    time.sleep(1)  # Time to drop the sandbag
-    FIRE_SUPPRESSION_MOTOR.set_power(-30)
-    time.sleep(1)
+    FIRE_SUPPRESSION_MOTOR.set_power(40)
+    time.sleep(0.1)  # Time to drop the sandbag
+    FIRE_SUPPRESSION_MOTOR.set_power(-40)
+    time.sleep(0.1)
     FIRE_SUPPRESSION_MOTOR.set_power(0)
     print("Sandbag deployed.")
     # Rotate back to original heading if needed
@@ -146,12 +146,12 @@ def scan_and_extinguish_fires():
 
     while fires_extinguished < 2 and not stop_signal:
         # Sweep sensor from -90° to +90°
-        for angle in range(-90, 91, 10):  # Adjust step size as needed
+        for angle in range(-180, -40, 10):  # Adjust step size as needed
             if stop_signal:
                 break
             # Rotate sensor to the specified angle
-            rotate_sensor_to_position(angle, speed=50)
-            time.sleep(0.2)  # Allow time for sensor stabilization
+            rotate_sensor_to_position(angle, speed=25)
+            time.sleep(0.05)  # Allow time for sensor stabilization
 
             color_val = COLOR_SENSOR.get_value()
             # Check for red sticker (fire)
@@ -159,14 +159,14 @@ def scan_and_extinguish_fires():
                 print(f"Red sticker detected at angle {angle}°.")
                 target_angle = angle
                 # Return sensor to the normal (0°) position
-                rotate_sensor_to_position(0, speed=50)
-                time.sleep(0.2)
+                rotate_sensor_to_position(-50, speed=50)
+                time.sleep(0.1)
                 drop_sandbag_with_alignment(target_angle)
                 fires_extinguished += 1
                 break  # Exit the sweep loop and resume scanning
 
-            # Check for blue sticker
-            elif color_val == 2:  # Blue detected
+            # Check for green sticker
+            elif color_val == 6:  # green detected
                 print(f"Blue sticker detected at angle {angle}°.")
                 avoid_blue_sticker(angle)
                 # Optionally return sensor to 0° after avoidance
