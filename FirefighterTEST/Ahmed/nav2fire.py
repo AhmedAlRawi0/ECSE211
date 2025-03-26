@@ -24,12 +24,12 @@ COLOUR_MOTOR = Motor("C")  # I still need to figure smt for the rotating color m
 siren_sound = Sound(duration=0.5, pitch="C4", volume=100)
 
 # Calibration constant (roy idea)
-TARGET_LEFT_DISTANCE = 2.5  # we can adjust this, i am just guessing
+TARGET_LEFT_DISTANCE = 8  # we can adjust this, i am just guessing
 
 # ----------------------------
 # Helper Functions
 # ----------------------------
-def drive_forward_with_correction(power=-20, duration=0.5): 
+def drive_forward_with_correction(power=-20, duration=0.5, Ldist=5): 
     """Drive forward while correcting drift using the left ultrasonic sensor."""
     if stop_signal:
         return
@@ -37,14 +37,14 @@ def drive_forward_with_correction(power=-20, duration=0.5):
     correction = 0
 
     if distance_left is not None:
-        if distance_left > TARGET_LEFT_DISTANCE + 1: # we can change the margin.
+        if distance_left > Ldist + 0.5: # we can change the margin.
             # Too far from wall — slant left
             LEFT_MOTOR.set_power(power)
-            RIGHT_MOTOR.set_power(power+5)
+            RIGHT_MOTOR.set_power(power-5)
             correction = "left"
-        elif distance_left < TARGET_LEFT_DISTANCE - 1:
+        elif distance_left < Ldist - 0.5:
             # Too close to wall — slant right
-            LEFT_MOTOR.set_power(power+5)
+            LEFT_MOTOR.set_power(power-5)
             RIGHT_MOTOR.set_power(power)
             correction = "right"
         else:
@@ -60,48 +60,23 @@ def drive_forward_with_correction(power=-20, duration=0.5):
     RIGHT_MOTOR.set_power(0)
     print(f"Correction applied: {correction} (Left Distance: {distance_left})")
 
-# based on tutorials, we need to check this
-# Constants based on your robot's physical configuration
-RW = 0.021  # Wheel radius in meters (2.1 cm)
-RB = 0.068   # Distance between wheels (wheelbase) in meters (6.8 cm)
-ORIENTTODEG = RB / RW  # Scaling factor for rotation
-
 def turn_right_90():
-    """Accurate 90° right turn using motor encoders and sleep estimation."""
+    """Turn right approximately 90°."""
     if stop_signal:
         return
-
-    angle = 90
-    motor_degrees = int(angle * ORIENTTODEG)
-    degrees_per_second = 180  # You can tune this value
-    estimated_time = abs(motor_degrees) / degrees_per_second
-
-    print(f"Turning right 90° using {motor_degrees} motor degrees, sleeping for {estimated_time:.2f}s")
-
-    LEFT_MOTOR.set_position_relative(motor_degrees)
-    RIGHT_MOTOR.set_position_relative(-motor_degrees)
-    time.sleep(estimated_time)
-
+    LEFT_MOTOR.set_power(-50)
+    RIGHT_MOTOR.set_power(0)
+    time.sleep(1.3)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
 
-
 def turn_left_90():
-    """Accurate 90° left turn using motor encoders and sleep estimation."""
+    """Turn left approximately 90°."""
     if stop_signal:
         return
-
-    angle = 90
-    motor_degrees = int(angle * ORIENTTODEG)
-    degrees_per_second = 180
-    estimated_time = abs(motor_degrees) / degrees_per_second
-
-    print(f"Turning left 90° using {motor_degrees} motor degrees, sleeping for {estimated_time:.2f}s")
-
-    LEFT_MOTOR.set_position_relative(-motor_degrees)
-    RIGHT_MOTOR.set_position_relative(motor_degrees)
-    time.sleep(estimated_time)
-
+    LEFT_MOTOR.set_power(0)
+    RIGHT_MOTOR.set_power(-50)
+    time.sleep(1.3)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
 
@@ -142,25 +117,27 @@ def subsystem_test():
 
     # Step 1: Drive until 55 cm from wall
     while not stop_signal:
-        drive_forward_with_correction(power=-20, duration=0.4) #we can change here
+        drive_forward_with_correction(power=-20, duration=0.5, Ldist=8) #we can change here
         front_distance = ULTRASONIC_SENSOR.get_cm()
-        if front_distance is not None and front_distance <= 55:
+        if front_distance is not None and front_distance <= 57:
             print(f"Front wall detected at {front_distance} cm.")
             break
 
     # Step 2: Turn right 90°
+    time.sleep(0.2)
     turn_right_90()
     print("Turned right 90°.")
 
     # Step 3: Drive until 30 cm from next wall
     while not stop_signal:
-        drive_forward_with_correction(power=-20, duration=0.4)
+        drive_forward_with_correction(power=-20, duration=0.4, Ldist=55)
         front_distance = ULTRASONIC_SENSOR.get_cm()
-        if front_distance is not None and front_distance <= 30:
+        if front_distance is not None and front_distance <= 33:
             print(f"Wall detected at {front_distance} cm.")
             break
 
     # Step 4: Turn left 90°
+    time.sleep(0.2)
     turn_left_90()
     print("Turned left 90°.")
 
