@@ -41,7 +41,7 @@ fn main() -> anyhow::Result<()> {
             )?;
             brickpi.set_motor_power(
                 MotorPort::PortB,
-                (enc_pos_right - enc_new_pos_right - 337) as i8,
+                (enc_new_pos_right - enc_pos_right - 337) as i8,
             )?;
 
             if enc_new_pos_left - enc_pos_left > 336 || enc_new_pos_right - enc_pos_right < -336 {
