@@ -68,9 +68,11 @@ def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, tolerance
 
 def turn_right_90(angle=90, power=30):
 
+    time.sleep(0.1)
+    
     LEFT_MOTOR.reset_encoder()
     RIGHT_MOTOR.reset_encoder()
-    conversion_factor = 5
+    conversion_factor = 3.5
     target_encoder = angle * conversion_factor
     LEFT_MOTOR.set_power(-power)
     RIGHT_MOTOR.set_power(power)
@@ -85,9 +87,11 @@ def turn_right_90(angle=90, power=30):
 
 def turn_left_90(angle=90, power=20):
 
+    time.sleep(0.1)
+
     LEFT_MOTOR.reset_encoder()
     RIGHT_MOTOR.reset_encoder()
-    conversion_factor = 5
+    conversion_factor = 3.5
     target_encoder = angle * conversion_factor
     LEFT_MOTOR.set_power(power)
     RIGHT_MOTOR.set_power(-power)
@@ -127,24 +131,24 @@ def rotate_robot(angle):
 
 def drop_sandbag_with_alignment(angle):
     print(f"Aligning robot using sensor angle: {angle}°")
-    FIRE_SUPPRESSION_MOTOR.set_power(40)
-    time.sleep(0.1)
-    FIRE_SUPPRESSION_MOTOR.set_power(-40)
+    FIRE_SUPPRESSION_MOTOR.set_power(60)
+    time.sleep(0.15)
+    FIRE_SUPPRESSION_MOTOR.set_power(-60)
     time.sleep(0.1)
     FIRE_SUPPRESSION_MOTOR.set_power(0)
     print("Sandbag deployed.")
     rotate_robot(-angle)
 
 def avoid_green_sticker(angle):
-    if angle > -120:
+    if angle > 70:
         rotate_robot(45)
         turn_angle = 45
     else:
         rotate_robot(-45)
         turn_angle = -45
-    drive_forward_with_correction(power=-20, duration=1, Ldist=None)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=None) #need to move forward based om time)
     rotate_robot(-turn_angle)
-    drive_forward_with_correction(power=-20, duration=2, Ldist=None)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=None)
     print("Avoidance complete.")
 
 
@@ -175,24 +179,24 @@ def play_siren():
 def navigate_to_fire_room():
     print("Navigation started...")
     while not stop_signal:
-        drive_forward_with_correction(power=-20, duration=0.5, Ldist=None)
+        drive_forward_with_correction(power=-20, duration=0.5, Ldist=7.8)
         front_distance = ULTRASONIC_SENSOR.get_cm()
-        if front_distance is not None and front_distance <= 57:
+        if front_distance is not None and front_distance <= 53:
             print(f"Wall detected at {front_distance} cm.")
             break
 
-    time.sleep(0.2)
+    time.sleep(0.1)
     turn_right_90()
     print("Turned right 90°.")
 
     while not stop_signal:
-        drive_forward_with_correction(power=-20, duration=0.4, Ldist=55)
+        drive_forward_with_correction(power=-20, duration=0.5, Ldist=53)
         front_distance = ULTRASONIC_SENSOR.get_cm()
-        if front_distance is not None and front_distance <= 33:
+        if front_distance is not None and front_distance <= 28:
             print(f"Wall detected at {front_distance} cm.")
             break
 
-    time.sleep(0.2)
+    time.sleep(0.1)
     turn_left_90()
     print("Turned left 90°.")
     print("Arrived at fire room.")
