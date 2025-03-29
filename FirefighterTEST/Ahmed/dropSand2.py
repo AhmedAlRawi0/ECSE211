@@ -30,20 +30,30 @@ RIGHT_DRIVE = Motor("B")
 # ----------------------------
 # Helper Function: Rotate Sensor to Position
 # ----------------------------
-def rotate_sensor_to_position(target, speed, threshold=2):
+def rotate_sensor_to_position(target):
     """
     Rotates the color sensor motor to the given absolute position.
-    Uses feedback from get_position() to stop within a threshold.
     """
-    current = COLOUR_MOTOR.get_position()
-    while abs(current - target) > threshold and not stop_signal:
-        # Determine direction
-        if current < target:
-            COLOUR_MOTOR.set_power(speed)
-        else:
-            COLOUR_MOTOR.set_power(-speed)
-        time.sleep(0.02)  # Short delay for responsiveness
-        current = COLOUR_MOTOR.get_position()
+    threshold = 2
+    prev = COLOUR_MOTOR.get_position()
+
+    if target > prev:
+        speed = 20
+    elif target < prev:
+        speed = -20
+    else:
+        print("Not moving colour sensor.")
+        return
+
+    COLOUR_SENSOR.set_power(speed)
+    time.sleep(0.1)
+    curr = COLOUR_MOTOR.get_position()
+
+    while (abs(curr - target) > threshold and not stop_signal
+           and abs(curr - prev) > threshold):
+        curr = COLOUR_MOTOR.get_position()
+        time.sleep(0.05) # Short delay for responsiveness
+
     COLOUR_MOTOR.set_power(0)
     # Ensure final position is set (could add correction logic here if needed)
     print(f"Sensor rotated to target angle {target}° (current: {current}°).")
