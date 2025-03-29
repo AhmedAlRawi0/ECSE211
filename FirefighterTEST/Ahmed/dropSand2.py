@@ -7,6 +7,7 @@ from utils.brick import (
     wait_ready_sensors,
     reset_brick,
 )
+from color_detection import rgb_to_color, Color
 
 # Constants for movement
 WHEEL_SEPARATION_CM = 15
@@ -194,27 +195,28 @@ def scan_and_extinguish_fires():
             if stop_signal:
                 break
             # Rotate sensor to the specified angle
-            rotate_sensor_to_position(angle, speed=25)
+            rotate_sensor_to_position(angle)
             time.sleep(0.05)  # Allow time for sensor stabilization
 
-            color_val = COLOR_SENSOR.get_value()
+            r, g, b = COLOR_SENSOR.get_value()
+            color = rgb_to_color([r, g, b])
             # Check for red sticker (fire)
-            if color_val == 5:  # Red detected
+            if color == Color.RED:  # Red detected
                 print(f"Red sticker detected at angle {angle}°.")
                 target_angle = angle
                 # Return sensor to the normal (0°) position
-                rotate_sensor_to_position(-50, speed=50)
+                rotate_sensor_to_position(-50)
                 time.sleep(0.1)
                 drop_sandbag_with_alignment(target_angle)
                 fires_extinguished += 1
                 break  # Exit the sweep loop and resume scanning
 
             # Check for green sticker
-            elif color_val == 6:  # green detected
+            elif color == Color.GREEN:  # green detected
                 print(f"Blue sticker detected at angle {angle}°.")
                 avoid_blue_sticker(angle)
                 # Optionally return sensor to 0° after avoidance
-                rotate_sensor_to_position(0, speed=50)
+                rotate_sensor_to_position(0)
                 time.sleep(0.2)
                 break  # Restart the sweep after handling blue sticker
 
