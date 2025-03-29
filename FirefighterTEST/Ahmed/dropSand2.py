@@ -8,6 +8,10 @@ from utils.brick import (
     reset_brick,
 )
 
+# Constants for movement
+WHEEL_SEPARATION_CM = 15
+WHEEL_DIAMETER_CM = 4
+
 # Global Variables
 stop_signal = False
 fires_extinguished = 0  # Number of fires extinguished
@@ -66,10 +70,12 @@ def rotate_robot(angle):
     """
     Rotates the robot in place by the specified angle.
     Positive angle rotates right; negative rotates left.
-    Assumes a conversion of 90° per second at a given motor power.
     """
-    rotation_time = abs(angle) / 90.0  # Adjust conversion factor as needed
-    print(f"Rotating robot by {angle}° (estimated {rotation_time:.2f}s).")
+    if angle == 0:
+        print("Not rotating robot.")
+        return
+    wheel_angle = angle * WHEEL_SEPARATION_CM / WHEEL_DIAMETER_CM
+    print(f"Rotating robot by {angle}° (counter-rotating wheels by {wheel_angle}°).")
     if angle > 0:
         # To rotate right: left motor forward, right motor backward.
         LEFT_DRIVE.set_power(30)
@@ -78,9 +84,20 @@ def rotate_robot(angle):
         # To rotate left: left motor backward, right motor forward.
         LEFT_DRIVE.set_power(-30)
         RIGHT_DRIVE.set_power(30)
-    time.sleep(rotation_time)
-    LEFT_DRIVE.set_power(0)
-    RIGHT_DRIVE.set_power(0)
+
+    left_moving = True
+    right_moving = True
+    while True:
+        if left_moving and abs(LEFT_MOTOR.get_position()) > max(0, abs(wheel_angle)):
+            LEFT_MOTOR.set_power(0)
+            left_moving = False
+        if right_moving and abs(RIGHT_MOTOR.get_position()) > max(0, abs(wheel_angle)):
+            RIGHT_MOTOR.set_power(0)
+            right_moving = False
+
+        if not left_moving and not right_moving:
+            break
+
     print("Rotation complete.")
 
 # ----------------------------
