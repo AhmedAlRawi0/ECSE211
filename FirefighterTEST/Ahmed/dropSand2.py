@@ -113,6 +113,8 @@ def rotate_robot(angle):
             and not left_slow and not right_slow):
             break
 
+        time.sleep(0.05)
+
     print("Rotation complete.")
 
 # ----------------------------
