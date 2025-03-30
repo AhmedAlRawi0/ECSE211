@@ -35,7 +35,7 @@ TARGET_LEFT_DISTANCE = 8  # Distance to maintain from the left wall
 # ----------------------------
 # Helper Functions
 # ----------------------------
-def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, Fdist = None, tolerance=0.3, correction_offset=5):
+def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, Fdist = 100, tolerance=0.3, correction_offset=5):
     if stop_signal:
         return
     # If Ldist is not provided, set it to the first sensor reading
@@ -51,30 +51,31 @@ def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, Fdist = N
             print(f"[DEBUG] Target front distance reached: {front_distance} cm")
             break
 
-    distance_left = ULTRASONIC_SENSOR_LEFT.get_cm()
+        distance_left = ULTRASONIC_SENSOR_LEFT.get_cm()
+        print(f"Left distance is {distance_left}")
 
-    if distance_left > Ldist + tolerance:
-        LEFT_MOTOR.set_power(power)
-        RIGHT_MOTOR.set_power(power - correction_offset)
-        correction = "left"
+        if distance_left > Ldist + tolerance:
+            LEFT_MOTOR.set_power(power)
+            RIGHT_MOTOR.set_power(power - correction_offset)
+            correction = "left"
 
-    elif distance_left < Ldist - tolerance:
-        LEFT_MOTOR.set_power(power - correction_offset)
-        RIGHT_MOTOR.set_power(power)
-        correction = "right"
+        elif distance_left < Ldist - tolerance:
+            LEFT_MOTOR.set_power(power - correction_offset)
+            RIGHT_MOTOR.set_power(power)
+            correction = "right"
 
-    else:
-        LEFT_MOTOR.set_power(power)
-        RIGHT_MOTOR.set_power(power)
-        correction = "straight"
+        else:
+            LEFT_MOTOR.set_power(power)
+            RIGHT_MOTOR.set_power(power)
+            correction = "straight"
 
-    print(f"[DEBUG] Correction applied: {correction} (Left Distance: {distance_left} cm)")
-    time.sleep(duration)
-    LEFT_MOTOR.set_power(0)
-    RIGHT_MOTOR.set_power(0)
-    time.sleep(0.05)
+        print(f"[DEBUG] Correction applied: {correction} (Left Distance: {distance_left} cm)")
+        time.sleep(0.0001)
+        LEFT_MOTOR.set_power(0)
+        RIGHT_MOTOR.set_power(0)
+        time.sleep(0.0001)
 
-def drive_forward_straight(angle):
+def drive_forward_straight(angle): #shit
     
     # Convert the desired forward rotation to a negative target encoder value.
     target = -abs(angle)
@@ -120,7 +121,7 @@ def turn_right_90():
         return
     LEFT_MOTOR.set_power(-50)
     RIGHT_MOTOR.set_power(0)
-    time.sleep(1.2)
+    time.sleep(1.1)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
 
@@ -129,7 +130,7 @@ def turn_left_90():
         return
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(-50)
-    time.sleep(1.2)
+    time.sleep(1.1)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
 
@@ -160,76 +161,59 @@ def rotate_robot(angle):
 
 def drop_sandbag_with_alignment(angle):
 
-    if 70 <= angle <= 80:
+    if 30 <= angle <= 80:
         print(f"Aligning robot using sensor angle: {angle}°")
-        FIRE_SUPPRESSION_MOTOR.set_power(40)
+        FIRE_SUPPRESSION_MOTOR.set_power(60)
         time.sleep(0.1)
-        FIRE_SUPPRESSION_MOTOR.set_power(-40)
+        FIRE_SUPPRESSION_MOTOR.set_power(-60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(0)
+        time.sleep(0.1)
         print("Sandbag deployed with no change in angle.")
     
-    elif angle < 70:
-        print(f"Angle {angle}° less than 70°: Rotating 45° before dropping sandbag.")
-        rotate_robot(45)
-        FIRE_SUPPRESSION_MOTOR.set_power(40)
+    elif angle < 30:
+        print(f"Angle {angle}° less than 30°: Rotating -25° (right) before dropping sandbag.")
+        rotate_robot(-25)
+        FIRE_SUPPRESSION_MOTOR.set_power(60)
         time.sleep(0.1)
-        FIRE_SUPPRESSION_MOTOR.set_power(-40)
+        FIRE_SUPPRESSION_MOTOR.set_power(-60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(0)
         print("Sandbag deployed.")
-        rotate_robot(-45)
+        time.sleep(0.3)
+        rotate_robot(25)
 
     elif angle > 80:
-        print(f"Angle {angle}° greater than 80°: Rotating -45° before dropping sandbag.")
-        rotate_robot(-45)
-        FIRE_SUPPRESSION_MOTOR.set_power(40)
+        print(f"Angle {angle}° greater than 80°: Rotating 45° (left) before dropping sandbag.")
+        rotate_robot(25)
+        FIRE_SUPPRESSION_MOTOR.set_power(60)
         time.sleep(0.1)
-        FIRE_SUPPRESSION_MOTOR.set_power(-40)
+        FIRE_SUPPRESSION_MOTOR.set_power(-60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(0)
         print("Sandbag deployed.")
-        rotate_robot(45)
+        time.sleep(0.3)
+        rotate_robot(-25)
 
 def avoid_green_sticker(angle):
     print(f"[DEBUG] Green sticker detected at angle {angle}°. Initiating avoidance maneuver...")
     # Initial forward bump to clear the sticker area
-    LEFT_MOTOR.set_power(20)
-    RIGHT_MOTOR.set_power(20)
-    time.sleep(0.30)
+    LEFT_MOTOR.set_power(30)
+    RIGHT_MOTOR.set_power(30)
+    time.sleep(0.80)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
-    print("[DEBUG] Completed initial forward bump; robot stopped.")
+    print("[DEBUG] Completed initial backward bump; robot stopped.")
 
     # Decide rotation direction based on detected angle
-    if angle >= 70:
+    if angle >= 60:
         print(f"[DEBUG] Angle {angle}° >= 70, rotating robot right by 45°.")
-        rotate_robot(-45)
-        turn_angle = -45
-    elif angle < 70:
+        rotate_robot(-90)
+        turn_angle = -90
+    elif angle < 60:
         print(f"[DEBUG] Angle {angle}° < 70, rotating robot left by 45°.")
-        rotate_robot(45)
-        turn_angle = 45
-
-    # Drive forward 720° rotation segment with straight correction
-    print("[DEBUG] Driving forward: first 720° rotation segment.")
-    drive_forward_straight(720)
-    
-    # Rotate back to reorient after first segment
-    print(f"[DEBUG] Rotating back by {-turn_angle}° to reorient.")
-    rotate_robot(-turn_angle)
-    
-    # Second forward segment
-    print("[DEBUG] Driving forward: second 720° rotation segment.")
-    drive_forward_straight(720)
-    
-    # Rotate back to reorient after second segment
-    print(f"[DEBUG] Rotating back by {-turn_angle}° to reorient again.")
-    rotate_robot(-turn_angle)
-    
-    # Third forward segment
-    print("[DEBUG] Driving forward: third 720° rotation segment.")
-    drive_forward_straight(720)
+        rotate_robot(90)
+        turn_angle = 90
     
     print("[DEBUG] Avoidance maneuver complete.")
 
@@ -284,7 +268,7 @@ def scan_and_extinguish_fires():
     rotate_sensor_to_position(0, speed=50)
     
     while fires_extinguished < 2 and not stop_signal:
-        for angle in range(0, 140, 10):
+        for angle in range(0, 132, 10):
             if stop_signal:
                 break
             rotate_sensor_to_position(angle, speed=25)
@@ -293,7 +277,7 @@ def scan_and_extinguish_fires():
 
             if color_val == 5:
                 print(f"Red detected at {angle}°")
-                rotate_sensor_to_position(0, speed=50)
+                rotate_sensor_to_position(100, speed=50)
                 time.sleep(0.1)
                 drop_sandbag_with_alignment(angle)
                 fires_extinguished += 1
