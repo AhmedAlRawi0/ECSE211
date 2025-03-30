@@ -99,7 +99,7 @@ def move_straight(distance: float) -> None:
     Moves the robot the given distance (in cm) straight forward (or backward in
     the case of negative input), using the motor encoders for feedback.
     """
-    angle = distance * 360 // (WHEEL_DIAMETER * pi)
+    angle = distance * 720 // (WHEEL_DIAMETER * pi)
 
     if angle > 0:
         left_power = 30
