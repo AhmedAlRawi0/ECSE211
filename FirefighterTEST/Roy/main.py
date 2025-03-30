@@ -35,7 +35,7 @@ TARGET_LEFT_DISTANCE = 8  # Distance to maintain from the left wall
 # ----------------------------
 # Helper Functions
 # ----------------------------
-def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, Fdist = 100, tolerance=0.3, correction_offset=5):
+def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, Fdist=100, tolerance=0.3, correction_offset=5):
     if stop_signal:
         return
     # If Ldist is not provided, set it to the first sensor reading
@@ -52,31 +52,28 @@ def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, Fdist = 1
             break
 
         distance_left = ULTRASONIC_SENSOR_LEFT.get_cm()
-        print(f"Left distance is {distance_left}")
+        print(f"[DEBUG] Left sensor reading: {distance_left} cm")
 
         if distance_left > Ldist + tolerance:
             LEFT_MOTOR.set_power(power)
             RIGHT_MOTOR.set_power(power - correction_offset)
             correction = "left"
-
         elif distance_left < Ldist - tolerance:
             LEFT_MOTOR.set_power(power - correction_offset)
             RIGHT_MOTOR.set_power(power)
             correction = "right"
-
         else:
             LEFT_MOTOR.set_power(power)
             RIGHT_MOTOR.set_power(power)
             correction = "straight"
 
-        print(f"[DEBUG] Correction applied: {correction} (Left Distance: {distance_left} cm)")
-        time.sleep(0.0001)
-        LEFT_MOTOR.set_power(0)
-        RIGHT_MOTOR.set_power(0)
-        time.sleep(0.0001)
+        print(f"[DEBUG] Correction applied: {correction} (Left sensor reading: {distance_left} cm)")
+    time.sleep(0.1)
+    LEFT_MOTOR.set_power(0)
+    RIGHT_MOTOR.set_power(0)
+    time.sleep(0.1)
 
-def drive_forward_straight(angle): #shit
-    
+def drive_forward_straight(angle):  # Drives forward until wheels rotate 'angle' degrees
     # Convert the desired forward rotation to a negative target encoder value.
     target = -abs(angle)
     
@@ -112,10 +109,8 @@ def drive_forward_straight(angle): #shit
     
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
-    print(f"Drive forward complete: {angle}° rotation achieved with straight correction.")
+    print(f"[DEBUG] Drive forward complete: {angle}° rotation achieved with straight correction.")
 
-
-    
 def turn_right_90():
     if stop_signal:
         return
@@ -124,6 +119,7 @@ def turn_right_90():
     time.sleep(1.1)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
+    print("[DEBUG] Turned right 90°.")
 
 def turn_left_90():
     if stop_signal:
@@ -133,6 +129,7 @@ def turn_left_90():
     time.sleep(1.1)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
+    print("[DEBUG] Turned left 90°.")
 
 def rotate_sensor_to_position(target, speed, threshold=2):
     current = COLOUR_MOTOR.get_position()
@@ -144,7 +141,7 @@ def rotate_sensor_to_position(target, speed, threshold=2):
         time.sleep(0.02)
         current = COLOUR_MOTOR.get_position()
     COLOUR_MOTOR.set_power(0)
-    print(f"Sensor rotated to target angle {target}° (current: {current}°).")
+    print(f"[DEBUG] Sensor rotated to target angle {target}° (current: {current}°).")
 
 def rotate_robot(angle):
     rotation_time = abs(angle) / 90.0
@@ -157,41 +154,38 @@ def rotate_robot(angle):
     time.sleep(rotation_time)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
-    print("Rotation complete.")
+    print("[DEBUG] Rotation complete.")
 
 def drop_sandbag_with_alignment(angle):
-
     if 30 <= angle <= 80:
-        print(f"Aligning robot using sensor angle: {angle}°")
+        print(f"[DEBUG] Aligning robot using sensor angle: {angle}°")
         FIRE_SUPPRESSION_MOTOR.set_power(60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(-60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(0)
         time.sleep(0.1)
-        print("Sandbag deployed with no change in angle.")
-    
+        print("[DEBUG] Sandbag deployed with no change in angle.")
     elif angle < 30:
-        print(f"Angle {angle}° less than 30°: Rotating -25° (right) before dropping sandbag.")
+        print(f"[DEBUG] Angle {angle}° less than 30°: Rotating -25° (right) before dropping sandbag.")
         rotate_robot(-25)
         FIRE_SUPPRESSION_MOTOR.set_power(60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(-60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(0)
-        print("Sandbag deployed.")
+        print("[DEBUG] Sandbag deployed.")
         time.sleep(0.3)
         rotate_robot(25)
-
     elif angle > 80:
-        print(f"Angle {angle}° greater than 80°: Rotating 45° (left) before dropping sandbag.")
+        print(f"[DEBUG] Angle {angle}° greater than 80°: Rotating 45° (left) before dropping sandbag.")
         rotate_robot(25)
         FIRE_SUPPRESSION_MOTOR.set_power(60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(-60)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(0)
-        print("Sandbag deployed.")
+        print("[DEBUG] Sandbag deployed.")
         time.sleep(0.3)
         rotate_robot(-25)
 
@@ -203,28 +197,24 @@ def avoid_green_sticker(angle):
     time.sleep(0.80)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
-    print("[DEBUG] Completed initial backward bump; robot stopped.")
+    print("[DEBUG] Completed initial forward bump; robot stopped.")
 
-    # Decide rotation direction based on detected angle
     if angle >= 60:
-        print(f"[DEBUG] Angle {angle}° >= 70, rotating robot right by 45°.")
+        print(f"[DEBUG] Angle {angle}° >= 60, rotating robot right by 90°.")
         rotate_robot(-90)
         turn_angle = -90
     elif angle < 60:
-        print(f"[DEBUG] Angle {angle}° < 70, rotating robot left by 45°.")
+        print(f"[DEBUG] Angle {angle}° < 60, rotating robot left by 90°.")
         rotate_robot(90)
         turn_angle = 90
-    
+
     print("[DEBUG] Avoidance maneuver complete.")
 
-# ----------------------------
-# Threads
-# ----------------------------
 def monitor_emergency_stop():
     global stop_signal
     while not stop_signal:
         if EMERGENCY_STOP.is_pressed():
-            print("Emergency Stop Activated!")
+            print("[DEBUG] Emergency Stop Activated!")
             stop_signal = True
             LEFT_MOTOR.set_power(0)
             RIGHT_MOTOR.set_power(0)
@@ -234,37 +224,28 @@ def monitor_emergency_stop():
         time.sleep(0.1)
 
 def play_siren():
+    global siren_stop
     while not siren_stop and not stop_signal:
         siren_sound.play()
         time.sleep(0.5)
 
-# ----------------------------
-# Navigation Sequence
-# ----------------------------
+
 def navigate_to_fire_room():
-    print("Navigation to fire room started...")
-    # Drive forward until the front sensor detects a wall at 57 cm
+    print("[DEBUG] Navigation to fire room started...")
     drive_forward_with_correction(power=-20, duration=0.5, Ldist=8, Fdist=57)
     time.sleep(0.2)
     turn_right_90()
-    print("Turned right 90°.") 
-
-    # Drive forward until the front sensor detects a wall at 33 cm
+    print("[DEBUG] Turned right 90°.")
     drive_forward_with_correction(power=-20, duration=0.4, Ldist=55, Fdist=33)
     time.sleep(0.2)
     turn_left_90()
-    print("Turned left 90°.")
-    print("Arrived at fire room.")
+    print("[DEBUG] Turned left 90°.")
+    print("[DEBUG] Arrived at fire room.")
 
-# ----------------------------
-# Fire Detection
-# ----------------------------
 def scan_and_extinguish_fires():
     global fires_extinguished
-    print("Fire scanning started...")
-    # Reset the encoder for the color sensor motor to set the initial position to 0°
+    print("[DEBUG] Fire scanning started...")
     COLOUR_MOTOR.reset_encoder()
-    # Rotate sensor to initial position (0°)
     rotate_sensor_to_position(0, speed=50)
     
     while fires_extinguished < 2 and not stop_signal:
@@ -276,54 +257,51 @@ def scan_and_extinguish_fires():
             color_val = COLOUR_SENSOR.get_value()
 
             if color_val == 5:
-                print(f"Red detected at {angle}°")
+                print(f"[DEBUG] Red detected at {angle}°")
                 rotate_sensor_to_position(100, speed=50)
                 time.sleep(0.1)
                 drop_sandbag_with_alignment(angle)
                 fires_extinguished += 1
                 break
             elif color_val == 1:
-                print(f"Green detected at {angle}°")
+                print(f"[DEBUG] Green detected at {angle}°")
                 rotate_sensor_to_position(0, speed=50)
                 avoid_green_sticker(angle)
                 time.sleep(0.2)
                 break
         time.sleep(0.2)
-    print("All required fires extinguished.")
-
+    print("[DEBUG] All required fires extinguished.")
 
 def navigate_inside_fire_room():
-    print("Navigation inside fire room started...")
-    # Drive forward until the front sensor reads 8 cm (with left sensor target at 81 cm)
+    print("[DEBUG] Navigation inside fire room started...")
     drive_forward_with_correction(power=-20, duration=0.5, Ldist=81, Fdist=8)
     time.sleep(0.2)
     turn_left_90()
-    print("Turned left 90°.")
-    # Drive forward until the front sensor reads 57 cm (with left sensor target at 110 cm)
-
+    print("[DEBUG] Turned left 90°.")
     drive_forward_with_correction(power=-20, duration=0.4, Ldist=110, Fdist=57)
     time.sleep(0.2)
     turn_left_90()
-    print("Turned left 90°.")
-    print("Navigation inside fire room complete.")
+    print("[DEBUG] Turned left 90°.")
+    print("[DEBUG] Navigation inside fire room complete.")
 
-# ----------------------------
-# Main Execution
-# ----------------------------
 def main_mission():
-    global stop_signal
+    global stop_signal, siren_stop
+    # Start emergency monitoring and siren threads
     emergency_thread = threading.Thread(target=monitor_emergency_stop)
     siren_thread = threading.Thread(target=play_siren)
     emergency_thread.start()
     siren_thread.start()
 
+    # Navigate to the fire room (blocking call)
     navigate_to_fire_room()
 
-    print("Arrived at fire room. Stopping siren.")
+    # Once arrived, stop the siren
+    print("[DEBUG] Arrived at fire room. Stopping siren.")
     siren_stop = True
     siren_thread.join()
-    print("Siren stopped.")
-    
+    print("[DEBUG] Siren stopped.")
+
+    # Run fire scanning/extinguishing and interior navigation concurrently
     scan_thread = threading.Thread(target=scan_and_extinguish_fires)
     navigation_thread = threading.Thread(target=navigate_inside_fire_room)
     scan_thread.start()
@@ -332,13 +310,13 @@ def main_mission():
     scan_thread.join()
     navigation_thread.join()
 
-    # Signal emergency thread to stop and finish the mission
+    # Finish mission: signal all threads to stop and join emergency thread
     stop_signal = True
     emergency_thread.join()
-    print("Mission completed.")
+    print("[DEBUG] Mission completed.")
 
 if __name__ == "__main__":
     wait_ready_sensors(True)
-    print("Firefighter Robot Full Mission Starting...")
+    print("[DEBUG] Firefighter Robot Full Mission Starting...")
     main_mission()
-    print("System shut down.")
+    print("[DEBUG] System shut down.")

@@ -3,7 +3,35 @@ import time
 from utils.brick import Motor
 from enum import Enum
 from math import sqrt, pi
+import threading
+import time
+from utils.brick import (
+    TouchSensor,
+    EV3UltrasonicSensor,
+    EV3ColorSensor,
+    Motor,
+    wait_ready_sensors,
+    reset_brick,
+)
+from utils.sound import Sound
+stop_signal = False
+fires_extinguished = 0
+siren_stop = False
 
+# ----------------------------
+# Sensors & Motors (Check ports)
+# ----------------------------
+EMERGENCY_STOP = TouchSensor(4)
+ULTRASONIC_SENSOR = EV3UltrasonicSensor(3, mode="cm")         # Front
+ULTRASONIC_SENSOR_LEFT = EV3UltrasonicSensor(1, mode="cm")    # Left
+COLOUR_SENSOR = EV3ColorSensor(2, mode="id")                  # Front on rotating motor
+LEFT_MOTOR = Motor("A")
+RIGHT_MOTOR = Motor("B")
+COLOUR_MOTOR = Motor("C")                                      # Rotates color sensor
+FIRE_SUPPRESSION_MOTOR = Motor("D")                           # Drops sandbag
+siren_sound = Sound(duration=0.5, pitch="C4", volume=100)
+
+TARGET_LEFT_DISTANCE = 8  # Distance to maintain from the left wall
 # Constants for movement
 WHEEL_SEPARATION_CM = 15
 WHEEL_DIAMETER_CM = 4
@@ -102,7 +130,7 @@ def move_straight(distance: float) -> None:
     Moves the robot the given distance (in cm) straight forward (or backward in
     the case of negative input), using the motor encoders for feedback.
     """
-    angle = distance * 720 // (WHEEL_DIAMETER * pi)
+    angle = distance * 720 // (WHEEL_DIAMETER_CM * pi)
 
     if angle > 0:
         left_power = 30
@@ -159,3 +187,27 @@ def move_straight(distance: float) -> None:
     RIGHT_DRIVE.set_power(0)
 
     print("Movement complete.")
+
+
+if __name__ == "__main__":
+    # Wait for sensors to be ready
+    wait_ready_sensors(True)
+    print("Starting function tests...")
+
+    # Test rotate_robot: rotate right 90° then left 90°
+    print("Testing rotate_robot(90) – should rotate right 90°:")
+    rotate_robot(90)
+    time.sleep(1)
+    print("Testing rotate_robot(-90) – should rotate left 90°:")
+    rotate_robot(-90)
+    time.sleep(1)
+
+    # Test move_straight: move forward 20 cm, then move backward 20 cm
+    print("Testing move_straight(20) – should move forward 20 cm:")
+    move_straight(20)
+    time.sleep(1)
+    print("Testing move_straight(-20) – should move backward 20 cm:")
+    move_straight(-20)
+    time.sleep(1)
+
+    print("All function tests complete.")
