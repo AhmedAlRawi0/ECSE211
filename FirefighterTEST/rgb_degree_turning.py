@@ -2,7 +2,7 @@
 import time
 from utils.brick import Motor
 from enum import Enum
-from math import sqrt
+from math import sqrt, pi
 
 # Constants for movement
 WHEEL_SEPARATION_CM = 15
@@ -43,9 +43,9 @@ def rgb_to_color(rgb: list[int]) -> Color:
 
     return min(colors, key=lambda c: color_distance(c[0], rgb))[1]
 
-def rotate_robot(angle):
+def rotate_robot(angle: int) -> None:
     """
-    Rotates the robot in place by the specified angle.
+    Rotates the robot in place by the specified angle (in degrees).
     Positive angle rotates right; negative rotates left.
     """
     if angle == 0:
@@ -93,3 +93,66 @@ def rotate_robot(angle):
         time.sleep(0.05)
 
     print("Rotation complete.")
+
+def move_straight(distance: float) -> None:
+    """
+    Moves the robot the given distance (in cm) straight forward (or backward in
+    the case of negative input), using the motor encoders for feedback.
+    """
+    angle = distance * 360 // (WHEEL_DIAMETER * pi)
+
+    if angle > 0:
+        left_power = 30
+        right_power = 30
+    elif angle < 0:
+        left_power = 30
+        right_power = -30
+    else:
+        print("Not moving robot.")
+        return
+
+    print(f"Moving robot {distance} cm forward.")
+
+    left_init_pos = LEFT_DRIVE.get_position()
+    right_init_pos = RIGHT_DRIVE.get_position()
+
+    LEFT_DRIVE.set_power(left_power)
+    RIGHT_DRIVE.set_power(right_power)
+    left_moving = True
+    right_moving = True
+    left_slow = False
+    right_slow = False
+
+    time.sleep(0.25)
+
+    while True:
+        time.sleep(0.25)
+
+        left_pos = LEFT_DRIVE.get_position()
+        right_pos = RIGHT_DRIVE.get_position()
+        if left_moving and abs(left_pos - left_init_pos) >= max(0, abs(angle) - 40):
+            left_power //= 2
+            left_moving = False
+            left_slow = True
+        elif left_slow and abs(left_pos - left_init_pos) >= abs(angle):
+            left_power = 0
+            left_slow = False
+        if right_moving and abs(right_pos - right_init_pos) >= max(0, abs(angle) - 40):
+            right_power //= 2
+            right_moving = False
+            right_slow = True
+        elif right_slow and abs(right_pos - right_init_pos) >= abs(angle):
+            right_power = 0
+            right_slow = False
+        if (not left_moving and not right_moving
+            and not left_slow and not right_slow):
+            break
+        
+        difference = (left_pos - left_init_pos) - (right_pos - right_init_pos)
+        LEFT_DRIVE.set_power(left_power - difference)
+        RIGHT_DRIVE.set_power(right_power + difference)
+
+    LEFT_DRIVE.set_power(0)
+    RIGHT_DRIVE.set_power(0)
+
+    print("Movement complete.")
