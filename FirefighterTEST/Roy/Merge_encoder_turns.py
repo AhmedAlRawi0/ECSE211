@@ -44,9 +44,6 @@ def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, tolerance
         
     distance_left = ULTRASONIC_SENSOR_LEFT.get_cm()
 
-    if distance_left is None:
-        distance_left = Ldist
-
     if distance_left > Ldist + tolerance:
         LEFT_MOTOR.set_power(power)
         RIGHT_MOTOR.set_power(power - correction_offset)
@@ -70,7 +67,7 @@ def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, tolerance
 def turn_right_90(angle=90, power=30):
 
     time.sleep(0.1)
-    
+
     LEFT_MOTOR.reset_encoder()
     RIGHT_MOTOR.reset_encoder()
     conversion_factor = 3.5
@@ -178,6 +175,7 @@ def play_siren():
 # ----------------------------
 def navigate_to_fire_room():
     print("Navigation started...")
+    
     while not stop_signal:
         drive_forward_with_correction(power=-20, duration=0.5, Ldist=7.8)
         front_distance = ULTRASONIC_SENSOR.get_cm()
