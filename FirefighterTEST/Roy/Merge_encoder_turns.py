@@ -1,5 +1,6 @@
 import threading
 import time
+import math
 from utils.brick import (
     TouchSensor,
     EV3UltrasonicSensor,
@@ -66,43 +67,86 @@ def drive_forward_with_correction(power=-20, duration=0.5, Ldist=None, tolerance
     RIGHT_MOTOR.set_power(0)
     print(f"Correction applied: {correction} (Left Distance: {distance_left})")
 
-def turn_right_90(angle=90, power=30):
+def calculate_wheel_rotation(deg, wheel_radius, track_width):
+    theta = math.radians(deg)                     # Turn angle in radians
+    arc_length = (track_width / 2.0) * theta        # Distance each wheel must travel along its arc
+    wheel_circumference = 2 * math.pi * wheel_radius
+    wheel_rotation_deg = (arc_length / wheel_circumference) * 360
+    return wheel_rotation_deg
 
-    time.sleep(0.1)
+def turn_right_90(wheel_radius=2.1, track_width=13.4):
+    # Calculate wheel rotation required for a 90° turn
+    rotation_deg = calculate_wheel_rotation(90, wheel_radius, track_width)
     
     LEFT_MOTOR.reset_encoder()
     RIGHT_MOTOR.reset_encoder()
-    conversion_factor = 3.5
-    target_encoder = angle * conversion_factor
-    LEFT_MOTOR.set_power(-power)
-    RIGHT_MOTOR.set_power(power)
-
-    while True:
-        if abs(LEFT_MOTOR.get_encoder()) >= target_encoder or abs(RIGHT_MOTOR.get_encoder()) >= target_encoder:
-            break
+    
+    # For a right turn:
+    # Left wheel moves forward (negative value)
+    # Right wheel moves backward (positive value)
+    LEFT_MOTOR.set_position(-rotation_deg)
+    RIGHT_MOTOR.set_position(rotation_deg)
+    
+    while abs(LEFT_MOTOR.get_encoder() + rotation_deg) > 5 or abs(RIGHT_MOTOR.get_encoder() - rotation_deg) > 5:
         time.sleep(0.01)
-    LEFT_MOTOR.set_power(0)
-    RIGHT_MOTOR.set_power(0)
-    print(f"Turned right by {angle}° (encoder counts reached: {target_encoder}).")
+    
+    print(f"Turned right 90° using set_position (each wheel rotated {rotation_deg:.2f}°).")
 
-def turn_left_90(angle=90, power=20):
-
-    time.sleep(0.1)
-
+def turn_left_90(wheel_radius=2.1, track_width=13.4):
+    # Calculate wheel rotation required for a 90° turn
+    rotation_deg = calculate_wheel_rotation(90, wheel_radius, track_width)
+    
     LEFT_MOTOR.reset_encoder()
     RIGHT_MOTOR.reset_encoder()
-    conversion_factor = 3.5
-    target_encoder = angle * conversion_factor
-    LEFT_MOTOR.set_power(power)
-    RIGHT_MOTOR.set_power(-power)
-
-    while True:
-        if abs(LEFT_MOTOR.get_encoder()) >= target_encoder or abs(RIGHT_MOTOR.get_encoder()) >= target_encoder:
-            break
+    
+    # For a left turn:
+    # Left wheel moves backward (positive value)
+    # Right wheel moves forward (negative value)
+    LEFT_MOTOR.set_position(rotation_deg)
+    RIGHT_MOTOR.set_position(-rotation_deg)
+    
+    while abs(LEFT_MOTOR.get_encoder() - rotation_deg) > 5 or abs(RIGHT_MOTOR.get_encoder() + rotation_deg) > 5:
         time.sleep(0.01)
-    LEFT_MOTOR.set_power(0)
-    RIGHT_MOTOR.set_power(0)
-    print(f"Turned left by {angle}° (encoder counts reached: {target_encoder}).")
+    
+    print(f"Turned left 90° using set_position (each wheel rotated {rotation_deg:.2f}°).")
+
+# def turn_right_90_position(target_angle=90):
+#     # Reset encoders to start from zero
+#     LEFT_MOTOR.reset_encoder()
+#     RIGHT_MOTOR.reset_encoder()
+#     # Determine the target position in degrees using an empirical conversion factor
+#     conversion_factor = 3.5  # Adjust this factor based on testing
+#     target_degrees = target_angle * conversion_factor
+#     # For a right turn, left motor should move forward (negative set_position) and right motor backward (positive set_position)
+#     LEFT_MOTOR.set_position(-target_degrees)
+#     RIGHT_MOTOR.set_position(target_degrees)
+#     # Wait until both motors reach the desired positions within a small error margin
+#     while True:
+#         left_pos = LEFT_MOTOR.get_encoder()
+#         right_pos = RIGHT_MOTOR.get_encoder()
+#         if abs(left_pos + target_degrees) < 5 and abs(right_pos - target_degrees) < 5:
+#             break
+#         time.sleep(0.01)
+#     print(f"Turned right by {target_angle}° using set_position (target: {target_degrees}°).")
+
+# def turn_left_90(angle=90, power=20):
+
+#     time.sleep(0.1)
+
+#     LEFT_MOTOR.reset_encoder()
+#     RIGHT_MOTOR.reset_encoder()
+#     conversion_factor = 3.5
+#     target_encoder = angle * conversion_factor
+#     LEFT_MOTOR.set_power(power)
+#     RIGHT_MOTOR.set_power(-power)
+
+#     while True:
+#         if abs(LEFT_MOTOR.get_encoder()) >= target_encoder or abs(RIGHT_MOTOR.get_encoder()) >= target_encoder:
+#             break
+#         time.sleep(0.01)
+#     LEFT_MOTOR.set_power(0)
+#     RIGHT_MOTOR.set_power(0)
+#     print(f"Turned left by {angle}° (encoder counts reached: {target_encoder}).")
 
 def rotate_sensor_to_position(target, speed, threshold=2):
     current = COLOUR_MOTOR.get_position()
