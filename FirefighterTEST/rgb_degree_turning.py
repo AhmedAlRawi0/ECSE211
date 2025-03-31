@@ -133,11 +133,11 @@ def move_straight(distance: float) -> None:
     angle = distance * 720 // (WHEEL_DIAMETER_CM * pi)
 
     if angle > 0:
-        left_power = 30
-        right_power = 30
+        left_power = -30
+        right_power = -30
     elif angle < 0:
         left_power = 30
-        right_power = -30
+        right_power = 30
     else:
         print("Not moving robot.")
         return
