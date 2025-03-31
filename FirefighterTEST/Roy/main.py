@@ -9,6 +9,7 @@ from utils.brick import (
     reset_brick,
 )
 from utils.sound import Sound
+from colour_detection import rgb_to_colour, Colour
 
 # ----------------------------
 # Global Variables
@@ -265,16 +266,17 @@ def scan_and_extinguish_fires():
                 break
             rotate_sensor_to_position(angle, speed=25)
             time.sleep(0.03)
-            color_val = COLOUR_SENSOR.get_value()
+            r, g, b = COLOUR_SENSOR.get_value()
+            colour = rgb_to_colour([r, g, b])
 
-            if color_val == 5:
+            if colour == Colour.RED:
                 print(f"[DEBUG] Red detected at {angle}°")
                 rotate_sensor_to_position(100, speed=50)
                 time.sleep(0.1)
                 drop_sandbag_with_alignment(angle)
                 fires_extinguished += 1
                 break
-            elif color_val == 1:
+            elif colour == Colour.GREEN:
                 print(f"[DEBUG] Green detected at {angle}°")
                 rotate_sensor_to_position(0, speed=50)
                 avoid_green_sticker(angle)
