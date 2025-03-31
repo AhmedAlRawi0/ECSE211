@@ -87,10 +87,15 @@ def drive_forward_straight(angle):  # Drives forward until wheels rotate 'angle'
     LEFT_MOTOR.set_power(left_power)
     RIGHT_MOTOR.set_power(right_power)
     
-    # Drive until both wheels reach the target position within a small threshold.
+    start_time = time.time()
+    max_time = 10  # Timeout after 10 seconds if target not reached
+
     while True:
         left_enc = LEFT_MOTOR.get_encoder()
         right_enc = RIGHT_MOTOR.get_encoder()
+        print(f"[DEBUG] Left encoder: {left_enc}, Right encoder: {right_enc}, Target: {target}")
+        
+        # Break if both wheels are within 10 degrees of the target
         if abs(left_enc - target) < 10 and abs(right_enc - target) < 10:
             break
         
@@ -106,10 +111,16 @@ def drive_forward_straight(angle):  # Drives forward until wheels rotate 'angle'
         RIGHT_MOTOR.set_power(adjusted_right_power)
         
         time.sleep(0.01)
+        
+        # Timeout check to avoid infinite loop
+        if time.time() - start_time > max_time:
+            print("[DEBUG] Timeout reached in drive_forward_straight.")
+            break
     
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
     print(f"[DEBUG] Drive forward complete: {angle}° rotation achieved with straight correction.")
+
 
 def turn_right_90():
     if stop_signal:
@@ -298,6 +309,7 @@ def main_mission():
     # Once arrived, stop the siren
     print("[DEBUG] Arrived at fire room. Stopping siren.")
     siren_stop = True
+    time.sleep(0.1)
     siren_thread.join()
     print("[DEBUG] Siren stopped.")
 
