@@ -201,6 +201,7 @@ def drop_sandbag_with_alignment(angle):
         print("[DEBUG] Sandbag deployed.")
         time.sleep(0.3)
         rotate_robot(-25)
+    
 
 def avoid_green_sticker(angle):
     print(f"[DEBUG] Green sticker detected at angle {angle}°. Initiating avoidance maneuver...")
@@ -304,20 +305,28 @@ def rotate_sensor_loop():
             direction *= -1
         time.sleep(0.1)
         
+        
+        
 def detect_fires_and_respond():
     global fires_extinguished
+    global angle
 
     while not stop_signal and fires_extinguished < 2:
         color_val = COLOUR_SENSOR.get_value()
-        angle = COLOUR_MOTOR.get_position()
+        #angle = COLOUR_MOTOR.get_position()
+        
+        
         print(f"[DEBUG] Sensor angle: {angle}°, Color: {color_val}")
 
         if color_val == 5:  # red
             print("[DEBUG] Fire detected!")
+            rotate_sensor_to_position(100 , 50) # brings back to original positio
+            time.sleep(1)
             drop_sandbag_with_alignment(angle)
             fires_extinguished += 1
             time.sleep(1)
             
+            # Do colour green
 #         elif color_val == 1:  # green
 #             print("[DEBUG] Furniture detected!")
         time.sleep(0.1)
