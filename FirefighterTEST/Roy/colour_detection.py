@@ -1,4 +1,7 @@
 
+from enum import Enum
+from math import sqrt
+
 class Colour(Enum):
     WHITE = 1
     YELLOW = 2
