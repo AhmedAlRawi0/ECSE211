@@ -24,7 +24,7 @@ siren_stop = False
 EMERGENCY_STOP = TouchSensor(4)
 ULTRASONIC_SENSOR = EV3UltrasonicSensor(3, mode="cm")         # Front
 ULTRASONIC_SENSOR_LEFT = EV3UltrasonicSensor(1, mode="cm")    # Left
-COLOUR_SENSOR = EV3ColorSensor(2, mode="id")                  # Front on rotating motor
+COLOUR_SENSOR = EV3ColorSensor(2, mode="component")                  # Front on rotating motor
 LEFT_MOTOR = Motor("A")
 RIGHT_MOTOR = Motor("B")
 COLOUR_MOTOR = Motor("C")                                      # Rotates color sensor
@@ -266,7 +266,7 @@ def scan_and_extinguish_fires():
                 break
             rotate_sensor_to_position(angle, speed=25)
             time.sleep(0.03)
-            r, g, b = COLOUR_SENSOR.get_value()
+            r, g, b, _ = COLOUR_SENSOR.get_value()
             colour = rgb_to_colour([r, g, b])
 
             if colour == Colour.RED:
