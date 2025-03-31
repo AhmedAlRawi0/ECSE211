@@ -299,11 +299,11 @@ def rotate_sensor_loop():
     direction = 1
     angle = 0
     while not stop_signal and fires_extinguished < 2:
-        rotate_sensor_to_position(angle, speed=25)
+        rotate_sensor_to_position(angle, speed=35)
         angle += 10 * direction
         if angle >= 120 or angle <= 0:
             direction *= -1
-        time.sleep(0.1)
+        time.sleep(0.03)
         
         
         
@@ -320,15 +320,19 @@ def detect_fires_and_respond():
 
         if color_val == 5:  # red
             print("[DEBUG] Fire detected!")
-            rotate_sensor_to_position(100 , 50) # brings back to original positio
-            time.sleep(1)
+            rotate_sensor_to_position(110 , 50) # brings back to original positio
+            time.sleep(0.2)
             drop_sandbag_with_alignment(angle)
             fires_extinguished += 1
-            time.sleep(1)
+            time.sleep(0.2)
             
-            # Do colour green
-#         elif color_val == 1:  # green
-#             print("[DEBUG] Furniture detected!")
+        elif color_val == 1:
+            print(f"[DEBUG] Green detected at {angle}°")
+            rotate_sensor_to_position(0, speed=50)
+            avoid_green_sticker(angle)
+            time.sleep(0.2)
+            print("[DEBUG] Furniture detected!")
+            
         time.sleep(0.1)
 
 
