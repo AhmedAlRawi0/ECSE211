@@ -253,6 +253,22 @@ def navigate_to_fire_room():
     print("[DEBUG] Turned left 90°.")
     print("[DEBUG] Arrived at fire room.")
 
+def navigate_to_base():
+    print("[DEBUG] Navigation to base started...")
+    # we can add a check for the orange threshold here, but i would recommend making it in the scan_and_extinguish_fires function
+    # so when we scan it we trigger this
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=33, Fdist=57)
+    time.sleep(0.2)
+    turn_right_90()
+    print("[DEBUG] Turned right 90°.")
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=55, Fdist=8)
+    time.sleep(0.2)
+    turn_left_90()
+    print("[DEBUG] Turned left 90°.")
+    drive_forward_with_correction(power=-20, duration=0.4, Ldist=114, Fdist=8)
+    time.sleep(0.2)
+    print("[DEBUG] Arrived at base.")
+
 def scan_and_extinguish_fires():
     global fires_extinguished
     print("[DEBUG] Fire scanning started...")
