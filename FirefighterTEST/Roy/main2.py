@@ -17,10 +17,9 @@ from math import *
 stop_signal = False
 fires_extinguished = 0
 siren_stop = False
-in_room = True # checks whether you start the
-angle = 0
-WHEEL_SEPARATION_CM = 15
-WHEEL_DIAMETER_CM = 4
+in_room = False
+motor_lock = threading.Lock() 
+
 # ----------------------------
 # Sensors & Motors (Check ports)
 # ----------------------------
@@ -34,7 +33,9 @@ COLOUR_MOTOR = Motor("C")                                      # Rotates color s
 FIRE_SUPPRESSION_MOTOR = Motor("D")                           # Drops sandbag
 siren_sound = Sound(duration=0.5, pitch="C4", volume=100)
 
-TARGET_LEFT_DISTANCE = 8  # Distance to maintain from the left wall
+# Constants for movement
+WHEEL_SEPARATION_CM = 15 
+WHEEL_DIAMETER_CM = 4.2
 
 # ----------------------------
 # Helper Functions
@@ -78,7 +79,7 @@ def drive_forward_with_correction(power=-20, Ldist=None, Fdist=100, tolerance=0.
     RIGHT_MOTOR.set_power(0)
     time.sleep(0.1)
 
-def drive_forward_with_correction_incremental(power=-20, duration=0.5, Ldist=None, Fdist=100, tolerance=0.3, correction_offset=5):
+def drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=None, Fdist=100, tolerance=0.3, correction_offset=5):
     if stop_signal:
         return
     # If Ldist is not provided, set it to the first left sensor reading
@@ -100,7 +101,7 @@ def drive_forward_with_correction_incremental(power=-20, duration=0.5, Ldist=Non
             break
         
         # If the front distance has decreased by 2 cm or more since the last pause, stop for 2 seconds
-        if previous_front is not None and front_distance is not None and (previous_front - front_distance) >= 2:
+        if previous_front is not None and front_distance is not None and (previous_front - front_distance) >= 3:
             print(f"[DEBUG] Front distance decreased by 2 cm (from {previous_front} cm to {front_distance} cm). Pausing for 2 seconds.")
             time.sleep(2)
             previous_front = front_distance  # Update the reference
@@ -249,10 +250,8 @@ def monitor_emergency_stop():
         time.sleep(0.1)
 
 def play_siren():
-    global siren_stop
-    global stop_signal
-    global in_room
-    while not siren_stop and not stop_signal and not in_room:
+    global siren_stop, stop_signal
+    while not siren_stop and not stop_signal:
         siren_sound.play()
         time.sleep(0.5)
 
@@ -295,13 +294,13 @@ def rotate_sensor_loop():
         print("[DEBUG] Fire scanning started...")
 
     while fires_extinguished < 2 and not stop_signal:
-        for angle in range(0, 152, 10):
+        # Create a list that goes from 0 to 150 and then from 150 back to 0
+        angles = list(range(0, 152, 10)) + list(range(150, -1, -10))
+        for angle in angles:
             if stop_signal:
                 break
             rotate_sensor_to_position(angle, speed=25)
             time.sleep(0.03)
-        
-        
         
 def detect_fires_and_respond():
     global fires_extinguished
@@ -313,30 +312,42 @@ def detect_fires_and_respond():
         print(f"[DEBUG] Sensor angle: {angle}°, Color: {color_val}")
 
         if color_val == 5:  # red
-            print("[DEBUG] Fire detected!")
-            rotate_sensor_to_position(130 , 50) # brings back to original positio
-            time.sleep(0.2)
-            drop_sandbag_with_alignment(angle)
-            fires_extinguished += 1
-            time.sleep(0.2)
-            
-        elif color_val == 3:
-            print(f"[DEBUG] Green detected at {angle}°")
-            rotate_sensor_to_position(0, speed=50)
-            avoid_green_sticker(angle)
-            time.sleep(0.2)
-            print("[DEBUG] Furniture detected!")
-            
+            motor_lock.acquire()
+            try:
+                LEFT_MOTOR.set_power(0)
+                RIGHT_MOTOR.set_power(0)
+                print(f"[DEBUG] Red detected at {angle}° - stopping motors for 2 seconds.")
+                time.sleep(0.1)
+                rotate_sensor_to_position(130, speed=50)
+                time.sleep(0.5)
+                drop_sandbag_with_alignment(angle)
+                fires_extinguished += 1
+                time.sleep(0.2)
+            finally:
+                motor_lock.release()
+        elif color_val == 3:  # Green detected
+            motor_lock.acquire()
+            try:
+                LEFT_MOTOR.set_power(0)
+                RIGHT_MOTOR.set_power(0)
+                print(f"[DEBUG] Green detected at {angle}° - stopping motors for 2 seconds.")
+                time.sleep(2)
+                rotate_sensor_to_position(0, speed=50)
+                avoid_green_sticker(angle)
+                time.sleep(0.2)
+                print("[DEBUG] Furniture detected!")
+            finally:
+                motor_lock.release()
         time.sleep(0.1)
 
 
 def navigate_inside_fire_room():
     print("[DEBUG] Navigation inside fire room started...")
-    drive_forward_with_correction(power=-10, duration=0.5, Ldist=81, Fdist=8)
+    drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=81, Fdist=8)
     time.sleep(0.2)
     turn_left_90()
     print("[DEBUG] Turned left 90°.")
-    drive_forward_with_correction(power=-10, duration=0.5, Ldist=110, Fdist=57)
+    drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=110, Fdist=57)
     time.sleep(0.2)
     turn_left_90()
     print("[DEBUG] Turned left 90°.")
@@ -344,47 +355,38 @@ def navigate_inside_fire_room():
 
 def main_mission():
     global stop_signal, siren_stop
-    # Start emergency monitoring and siren threads
     emergency_thread = threading.Thread(target=monitor_emergency_stop)
     siren_thread = threading.Thread(target=play_siren)
     emergency_thread.start()
     siren_thread.start()
 
-    # Navigate to the fire room (blocking call)
     navigate_to_fire_room()
 
-    # Once arrived, stop the siren
     print("[DEBUG] Arrived at fire room. Stopping siren.")
     siren_stop = True
     time.sleep(0.1)
     siren_thread.join()
     print("[DEBUG] Siren stopped.")
 
-    # Start both scanning threads
     sweep_thread = threading.Thread(target=rotate_sensor_loop)
     detect_thread = threading.Thread(target=detect_fires_and_respond)
-    print("Sweep thread started.")
+
+    print("[DEBUG] Starting sweep thread.")
     sweep_thread.start()
+    print("[DEBUG] Starting detect thread.")
     detect_thread.start()
-    print("Detect thread started.")
-
-
-    # Navigate through fire room concurrently
     navigation_thread = threading.Thread(target=navigate_inside_fire_room)
+
+    print("[DEBUG] Starting navigation inside fire room thread.")
     navigation_thread.start()
-    print("Navigation thread started.")
-
-
-    # Wait for fire extinguishing to complete
     detect_thread.join()
     navigation_thread.join()
-    stop_signal = True  # signal to stop sweep
-    sweep_thread.join()
-    print("all joined")
-
-
-    # Finish mission: signal all threads to stop and join emergency thread
     stop_signal = True
+    sweep_thread.join()
+    print("[DEBUG] All threads joined.")
+
+    navigate_to_base()
+
     emergency_thread.join()
     print("[DEBUG] Mission completed.")
 
