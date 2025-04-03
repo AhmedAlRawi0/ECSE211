@@ -40,7 +40,7 @@ WHEEL_DIAMETER_CM = 4.2
 # ----------------------------
 # Helper Functions
 # ----------------------------
-def drive_forward_with_correction(power=-20, Ldist=None, Fdist=100, tolerance=0.3, correction_offset=5):
+def drive_forward_with_correction(power=-20, Ldist=None, duration=0.5, Fdist=100, tolerance=0.3, correction_offset=5):
     if stop_signal:
         return
     # If Ldist is not provided, set it to the first sensor reading
@@ -317,9 +317,9 @@ def detect_fires_and_respond():
                 LEFT_MOTOR.set_power(0)
                 RIGHT_MOTOR.set_power(0)
                 print(f"[DEBUG] Red detected at {angle}° - stopping motors for 2 seconds.")
-                time.sleep(0.1)
+                time.sleep(0.2)
                 rotate_sensor_to_position(130, speed=50)
-                time.sleep(0.5)
+                time.sleep(1)
                 drop_sandbag_with_alignment(angle)
                 fires_extinguished += 1
                 time.sleep(0.2)
@@ -331,8 +331,9 @@ def detect_fires_and_respond():
                 LEFT_MOTOR.set_power(0)
                 RIGHT_MOTOR.set_power(0)
                 print(f"[DEBUG] Green detected at {angle}° - stopping motors for 2 seconds.")
-                time.sleep(2)
+                time.sleep(0.2)
                 rotate_sensor_to_position(0, speed=50)
+                time.sleep(0.2)
                 avoid_green_sticker(angle)
                 time.sleep(0.2)
                 print("[DEBUG] Furniture detected!")
@@ -370,15 +371,15 @@ def main_mission():
 
     sweep_thread = threading.Thread(target=rotate_sensor_loop)
     detect_thread = threading.Thread(target=detect_fires_and_respond)
+    navigation_thread = threading.Thread(target=navigate_inside_fire_room)
 
     print("[DEBUG] Starting sweep thread.")
     sweep_thread.start()
     print("[DEBUG] Starting detect thread.")
     detect_thread.start()
-    navigation_thread = threading.Thread(target=navigate_inside_fire_room)
-
     print("[DEBUG] Starting navigation inside fire room thread.")
     navigation_thread.start()
+    
     detect_thread.join()
     navigation_thread.join()
     stop_signal = True
