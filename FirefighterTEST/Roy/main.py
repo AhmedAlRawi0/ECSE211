@@ -311,7 +311,7 @@ def scan_and_extinguish_fires():
                 break
             rotate_sensor_to_position(angle, speed=25)
             time.sleep(0.03)
-            r, g, b, _ = COLOUR_SENSOR.get_value()
+            r, g, b = COLOUR_SENSOR.get_rgb()
             colour = rgb_to_colour([r, g, b])
 
             if colour == Colour.RED:
