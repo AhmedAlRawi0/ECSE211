@@ -178,31 +178,31 @@ def rotate_robot(angle):
         left_power = -30
         right_power = 30
 
-    left_init_pos = LEFT_DRIVE.get_position()
-    right_init_pos = RIGHT_DRIVE.get_position()
+    left_init_pos = LEFT_MOTOR.get_position()
+    right_init_pos = RIGHT_MOTOR.get_position()
 
-    LEFT_DRIVE.set_power(left_power)
-    RIGHT_DRIVE.set_power(left_power)
+    LEFT_MOTOR.set_power(left_power)
+    RIGHT_MOTOR.set_power(right_power)
 
     left_moving = True
     left_slow = False
     right_moving = True
     right_slow = False
     while True:
-        if left_moving and abs(LEFT_DRIVE.get_position() - left_init_pos) > max(0, abs(wheel_angle) - 20):
+        if left_moving and abs(LEFT_MOTOR.get_position() - left_init_pos) > max(0, abs(wheel_angle) - 20):
             LEFT_DRIVE.set_power(left_power // 2)
             left_moving = False
             left_slow = True
-        if right_moving and abs(RIGHT_DRIVE.get_position() - right_init_pos) > max(0, abs(wheel_angle) - 20):
-            RIGHT_DRIVE.set_power(right_power // 2)
+        if right_moving and abs(RIGHT_MOTOR.get_position() - right_init_pos) > max(0, abs(wheel_angle) - 20):
+            RIGHT_MOTOR.set_power(right_power // 2)
             right_moving = False
             right_slow = True
 
-        if left_slow and abs(LEFT_DRIVE.get_position() - left_init_pos) > abs(wheel_angle):
-            LEFT_DRIVE.set_power(0)
+        if left_slow and abs(LEFT_MOTOR.get_position() - left_init_pos) > abs(wheel_angle):
+            LEFT_MOTOR.set_power(0)
             left_slow = False
-        if right_slow and abs(RIGHT_DRIVE.get_position() - right_init_pos) > abs(wheel_angle):
-            RIGHT_DRIVE.set_power(0)
+        if right_slow and abs(RIGHT_MOTOR.get_position() - right_init_pos) > abs(wheel_angle):
+            RIGHT_MOTOR.set_power(0)
             right_slow = False
 
         if (not left_moving and not right_moving
@@ -311,7 +311,7 @@ def scan_and_extinguish_fires():
                 break
             rotate_sensor_to_position(angle, speed=25)
             time.sleep(0.03)
-            r, g, b = COLOUR_SENSOR.get_rgb()
+            r, g, b, _ = COLOUR_SENSOR.get_value()
             colour = rgb_to_colour([r, g, b])
 
             if colour == Colour.RED:
