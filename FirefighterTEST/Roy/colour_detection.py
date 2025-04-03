@@ -24,11 +24,11 @@ def rgb_to_colour(rgb: list[int]) -> Colour:
     RGB values, with metric defined by the `color_distance` function.
     """
     colours = [
-        ([306, 258, 126], Color.WHITE),
-        ([284, 177, 20], Color.YELLOW),
-        ([237, 56, 12], Color.ORANGE),
-        ([149, 176, 16], Color.GREEN),
-        ([180, 21, 8], Color.RED),
+        ([306, 258, 126], Colour.WHITE),
+        ([284, 177, 20], Colour.YELLOW),
+        ([237, 56, 12], Colour.ORANGE),
+        ([149, 176, 16], Colour.GREEN),
+        ([180, 21, 8], Colour.RED),
     ]
 
     return min(colours, key=lambda c: colour_distance(c[0], rgb))[1]
