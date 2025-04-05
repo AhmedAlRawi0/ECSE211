@@ -18,7 +18,8 @@ stop_signal = False
 fires_extinguished = 0
 siren_stop = False
 in_room = False
-motor_lock = threading.Lock() 
+motor_lock = threading.Lock()
+detected_bool = True
 
 # ----------------------------
 # Sensors & Motors (Check ports)
@@ -289,11 +290,12 @@ def navigate_to_base():
 def rotate_sensor_loop():
     """Continuously sweep sensor left/right."""
     global angle
+    global sweep_bool
     COLOUR_MOTOR.reset_encoder()
     if in_room:
         print("[DEBUG] Fire scanning started...")
 
-    while fires_extinguished < 2 and not stop_signal:
+    while fires_extinguished < 2 and not stop_signal and sweep_bool:
         # Create a list that goes from 0 to 150 and then from 150 back to 0
         angles = list(range(0, 152, 10)) + list(range(150, -1, -10))
         for angle in angles:
@@ -320,7 +322,7 @@ def detect_fires_and_respond():
                 time.sleep(0.2)
                 rotate_sensor_to_position(130, speed=50)
                 time.sleep(1)
-                drop_sandbag_with_alignment(angle)
+                drop_sandbag_with_alignment(angle) #if it is red
                 fires_extinguished += 1
                 time.sleep(0.2)
             finally:
