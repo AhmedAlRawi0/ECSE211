@@ -83,6 +83,8 @@ def drive_forward_with_correction(power=-20, Ldist=None, duration=0.5, Fdist=Non
     time.sleep(0.1)
 
 def drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=None, Fdist=None, tolerance=0.3, correction_offset=5):
+    global fires_extinguished
+
     if stop_signal:
         return
     # If Ldist is not provided, set it to the first left sensor reading
@@ -98,7 +100,10 @@ def drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=None, Fdis
     
     while not stop_signal and not stop:
         while not stop_signal and not fire_detected:
-            # Check the current front sensor reading
+            
+            if fires_extinguished >= 2:
+                power = -20    
+
             front_distance = ULTRASONIC_SENSOR.get_cm()
             print(f"[DEBUG] Front sensor reading: {front_distance} cm")
             
@@ -131,7 +136,7 @@ def drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=None, Fdis
             RIGHT_MOTOR.set_power(0)
             time.sleep(0.5)
 
-        time.sleep(2)
+        time.sleep(1)
 
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
@@ -172,6 +177,8 @@ def rotate_sensor_to_position(target, speed, threshold=2):
     print(f"[DEBUG] Sensor rotated to target angle {target}° (current: {current}°).")
 
 def rotate_robot(angle):
+    if stop_signal:
+        return
     rotation_time = abs(angle) / 90.0
     if angle > 0:
         LEFT_MOTOR.set_power(30)
@@ -185,37 +192,55 @@ def rotate_robot(angle):
     print("[DEBUG] Rotation complete.")
 
 def drop_sandbag_with_alignment(angle):
-    if 40 <= angle <= 130:
-        print(f"[DEBUG] Aligning robot using sensor angle: {angle}°")
-        FIRE_SUPPRESSION_MOTOR.set_power(60)
+
+    def deploy_sandbag():
+        FIRE_SUPPRESSION_MOTOR.set_power(30)
         time.sleep(0.1)
-        FIRE_SUPPRESSION_MOTOR.set_power(-60)
-        time.sleep(0.1)
-        FIRE_SUPPRESSION_MOTOR.set_power(0)
-        time.sleep(0.1)
-        print("[DEBUG] Sandbag deployed with no change in angle.")
-    elif angle < 40:
-        print(f"[DEBUG] Angle {angle}° less than 30°: Rotating -25° (right) before dropping sandbag.")
-        rotate_robot(-25)
-        FIRE_SUPPRESSION_MOTOR.set_power(60)
-        time.sleep(0.1)
-        FIRE_SUPPRESSION_MOTOR.set_power(-60)
+        FIRE_SUPPRESSION_MOTOR.set_power(-30)
         time.sleep(0.1)
         FIRE_SUPPRESSION_MOTOR.set_power(0)
+        time.sleep(0.1)
         print("[DEBUG] Sandbag deployed.")
-        time.sleep(0.3)
-        rotate_robot(25)
-    elif angle > 80:
-        print(f"[DEBUG] Angle {angle}° greater than 80°: Rotating 45° (left) before dropping sandbag.")
-        rotate_robot(25)
-        FIRE_SUPPRESSION_MOTOR.set_power(60)
-        time.sleep(0.1)
-        FIRE_SUPPRESSION_MOTOR.set_power(-60)
-        time.sleep(0.1)
-        FIRE_SUPPRESSION_MOTOR.set_power(0)
-        print("[DEBUG] Sandbag deployed.")
-        time.sleep(0.3)
-        rotate_robot(-25)
+
+    def movement(duration=0.3):
+        LEFT_MOTOR.set_power(-20)
+        RIGHT_MOTOR.set_power(-20)
+        time.sleep(duration)
+        LEFT_MOTOR.set_power(0)
+        RIGHT_MOTOR.set_power(0)
+        time.sleep(duration)
+
+    if angle <= 30:
+        print(f"[DEBUG] Angle {angle}° < 30°: Rotate -30° before deploy.")
+        rotate_robot(-30)
+        deploy_sandbag()
+        rotate_robot(30)
+
+    elif 30 < angle < 60:
+        movement()
+        print(f"[DEBUG] Angle {angle}° between 30–60°: Rotate -15° before deploy.")
+        rotate_robot(-15)
+        deploy_sandbag()
+        rotate_robot(15)
+
+    elif 60 <= angle <= 80:
+        movement()
+        print(f"[DEBUG] Angle {angle}° between 60–80°: No rotation.")
+        deploy_sandbag()
+
+    elif 80 < angle < 120:
+        movement(duration=0.5)
+        print(f"[DEBUG] Angle {angle}° between 80–120°: Rotate 15° before deploy.")
+        rotate_robot(15)
+        deploy_sandbag()
+        rotate_robot(-15)
+
+    else:
+        print(f"[DEBUG] Angle {angle}° >= 120°: Rotate 30° before deploy.")
+        rotate_robot(30)
+        deploy_sandbag()
+        rotate_robot(-30)
+
     
 
 def avoid_green_sticker(angle):
@@ -320,12 +345,13 @@ def rotate_sensor_loop():
         if not fire_detected:
             angles = list(range(0, 152, 10)) + list(range(150, -1, -10))
             for angle in angles:
-                if stop_signal:
+                if stop_signal or fire_detected:
                     break
                 rotate_sensor_to_position(angle, speed=25)
                 time.sleep(0.03)
         else:
-            time.sleep(2)
+            time.sleep(1)
+            rotate_sensor_to_position(0, speed=25)
         
 def detect_fires_and_respond():
 
@@ -343,11 +369,11 @@ def detect_fires_and_respond():
             RIGHT_MOTOR.set_power(0)
             print(f"[DEBUG] Red detected at {angle}° - stopping motors")
             time.sleep(0.2)
-            rotate_sensor_to_position(130, speed=50)
+            rotate_sensor_to_position(150, speed=50)
             time.sleep(0.2)
             drop_sandbag_with_alignment(angle)
             fires_extinguished += 1
-            time.sleep(2)
+            time.sleep(1)
             fire_detected = False
 
         elif color_val == 3:  # Green detected
@@ -359,7 +385,7 @@ def detect_fires_and_respond():
             rotate_sensor_to_position(0, speed=50)
             time.sleep(0.2)
             avoid_green_sticker(angle)
-            time.sleep(2)
+            time.sleep(1)
             fire_detected = False
 
         time.sleep(0.1)
@@ -371,7 +397,7 @@ def navigate_inside_fire_room():
     time.sleep(0.2)
     rotate_robot(-90)
     print("[DEBUG] rotated right 90°.")
-    drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=31, Fdist=8)
+    drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=31, Fdist=9)
     time.sleep(0.2)
     rotate_robot(90)
     print("[DEBUG] rotated left 90°.")
