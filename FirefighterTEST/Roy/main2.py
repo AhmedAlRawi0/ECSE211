@@ -11,36 +11,34 @@ from utils.brick import (
 from utils.sound import Sound
 from math import *
 
-# ----------------------------
+
 # Global Variables
-# ----------------------------
 stop_signal = False
 fires_extinguished = 0
 siren_stop = False
 in_room = False
-motor_lock = threading.Lock()
-detected_bool = True
+fire_detected = False
 
-# ----------------------------
+
 # Sensors & Motors (Check ports)
-# ----------------------------
+
 EMERGENCY_STOP = TouchSensor(4)
-ULTRASONIC_SENSOR = EV3UltrasonicSensor(3, mode="cm")         # Front
-ULTRASONIC_SENSOR_LEFT = EV3UltrasonicSensor(1, mode="cm")    # Left
-COLOUR_SENSOR = EV3ColorSensor(2, mode="id")                  # Front on rotating motor
+ULTRASONIC_SENSOR = EV3UltrasonicSensor(3, mode="cm")         
+ULTRASONIC_SENSOR_LEFT = EV3UltrasonicSensor(1, mode="cm")   
+COLOUR_SENSOR = EV3ColorSensor(2, mode="id")                 
 LEFT_MOTOR = Motor("A")
 RIGHT_MOTOR = Motor("B")
-COLOUR_MOTOR = Motor("C")                                      # Rotates color sensor
-FIRE_SUPPRESSION_MOTOR = Motor("D")                           # Drops sandbag
+COLOUR_MOTOR = Motor("C")                                     
+FIRE_SUPPRESSION_MOTOR = Motor("D")                        
 siren_sound = Sound(duration=0.5, pitch="C4", volume=100)
 
 # Constants for movement
 WHEEL_SEPARATION_CM = 15 
 WHEEL_DIAMETER_CM = 4.2
 
-# ----------------------------
+
 # Helper Functions
-# ----------------------------
+
 def drive_forward_with_correction(power=-20, Ldist=None, duration=0.5, Fdist=100, tolerance=0.3, correction_offset=5):
     if stop_signal:
         return
@@ -91,7 +89,7 @@ def drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=None, Fdis
     # Record the initial front sensor reading
     previous_front = ULTRASONIC_SENSOR.get_cm()
     
-    while not stop_signal:
+    while not stop_signal and not fire_detected:
         # Check the current front sensor reading
         front_distance = ULTRASONIC_SENSOR.get_cm()
         print(f"[DEBUG] Front sensor reading: {front_distance} cm")
@@ -129,7 +127,7 @@ def drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=None, Fdis
         time.sleep(duration)
         LEFT_MOTOR.set_power(0)
         RIGHT_MOTOR.set_power(0)
-        time.sleep(0.1)
+        time.sleep(0.25)
     
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
@@ -290,12 +288,11 @@ def navigate_to_base():
 def rotate_sensor_loop():
     """Continuously sweep sensor left/right."""
     global angle
-    global sweep_bool
     COLOUR_MOTOR.reset_encoder()
     if in_room:
         print("[DEBUG] Fire scanning started...")
 
-    while fires_extinguished < 2 and not stop_signal and sweep_bool:
+    while fires_extinguished < 2 and not stop_signal and not fire_detected:
         # Create a list that goes from 0 to 150 and then from 150 back to 0
         angles = list(range(0, 152, 10)) + list(range(150, -1, -10))
         for angle in angles:
@@ -307,6 +304,7 @@ def rotate_sensor_loop():
 def detect_fires_and_respond():
     global fires_extinguished
     global angle
+    global fire_detected
 
     while not stop_signal and fires_extinguished < 2:
         color_val = COLOUR_SENSOR.get_value()        
@@ -314,33 +312,20 @@ def detect_fires_and_respond():
         print(f"[DEBUG] Sensor angle: {angle}°, Color: {color_val}")
 
         if color_val == 5:  # red
-            motor_lock.acquire()
-            try:
-                LEFT_MOTOR.set_power(0)
-                RIGHT_MOTOR.set_power(0)
-                print(f"[DEBUG] Red detected at {angle}° - stopping motors for 2 seconds.")
-                time.sleep(0.2)
-                rotate_sensor_to_position(130, speed=50)
-                time.sleep(1)
-                drop_sandbag_with_alignment(angle) #if it is red
-                fires_extinguished += 1
-                time.sleep(0.2)
-            finally:
-                motor_lock.release()
-        elif color_val == 3:  # Green detected
-            motor_lock.acquire()
-            try:
-                LEFT_MOTOR.set_power(0)
-                RIGHT_MOTOR.set_power(0)
-                print(f"[DEBUG] Green detected at {angle}° - stopping motors for 2 seconds.")
-                time.sleep(0.2)
-                rotate_sensor_to_position(0, speed=50)
-                time.sleep(0.2)
-                avoid_green_sticker(angle)
-                time.sleep(0.2)
-                print("[DEBUG] Furniture detected!")
-            finally:
-                motor_lock.release()
+            fire_detected = True
+
+            LEFT_MOTOR.set_power(0)
+            RIGHT_MOTOR.set_power(0)
+            print(f"[DEBUG] Red detected at {angle}° - stopping motors for 2 seconds.")
+            time.sleep(0.2)
+            rotate_sensor_to_position(130, speed=50)
+            time.sleep(0.2)
+            drop_sandbag_with_alignment(angle) #if it is red
+            fires_extinguished += 1
+            time.sleep(0.2)
+
+            fire_detected = False
+
         time.sleep(0.1)
 
 
