@@ -85,50 +85,51 @@ def drive_forward_with_correction_room(power=-10, duration=0.5, Ldist=None, Fdis
     if Ldist is None:
         Ldist = ULTRASONIC_SENSOR_LEFT.get_cm()
     print(f"[DEBUG] Starting drive_forward_with_correction_incremental: Target Fdist = {Fdist} cm, Ldist = {Ldist} cm")
-    
+    stop = False
     # Record the initial front sensor reading
     previous_front = ULTRASONIC_SENSOR.get_cm()
-    
-    while not stop_signal and not fire_detected:
-        # Check the current front sensor reading
-        front_distance = ULTRASONIC_SENSOR.get_cm()
-        print(f"[DEBUG] Front sensor reading: {front_distance} cm")
-        
-        # If the current front distance is less than or equal to target, stop
-        if front_distance is not None and front_distance <= Fdist:
-            print(f"[DEBUG] Target front distance reached: {front_distance} cm")
-            break
-        
-        # If the front distance has decreased by 2 cm or more since the last pause, stop for 2 seconds
-        if previous_front is not None and front_distance is not None and (previous_front - front_distance) >= 3:
-            print(f"[DEBUG] Front distance decreased by 2 cm (from {previous_front} cm to {front_distance} cm). Pausing for 2 seconds.")
-            time.sleep(2)
-            previous_front = front_distance  # Update the reference
-        
-        # Get left sensor reading for correction
-        distance_left = ULTRASONIC_SENSOR_LEFT.get_cm()
-        print(f"[DEBUG] Left sensor reading: {distance_left} cm")
-        
-        # Apply correction based on left sensor reading relative to Ldist
-        if distance_left > Ldist + tolerance:
-            LEFT_MOTOR.set_power(power)
-            RIGHT_MOTOR.set_power(power - correction_offset)
-            correction = "left"
-        elif distance_left < Ldist - tolerance:
-            LEFT_MOTOR.set_power(power - correction_offset)
-            RIGHT_MOTOR.set_power(power)
-            correction = "right"
-        else:
-            LEFT_MOTOR.set_power(power)
-            RIGHT_MOTOR.set_power(power)
-            correction = "straight"
-        
-        print(f"[DEBUG] Correction applied: {correction} (Left sensor reading: {distance_left} cm)")
-        time.sleep(duration)
-        LEFT_MOTOR.set_power(0)
-        RIGHT_MOTOR.set_power(0)
-        time.sleep(0.25)
-    
+    while not stop_signal and not stop:
+        while not stop_signal and not fire_detected:
+            # Check the current front sensor reading
+            front_distance = ULTRASONIC_SENSOR.get_cm()
+            print(f"[DEBUG] Front sensor reading: {front_distance} cm")
+            
+            # If the current front distance is less than or equal to target, stop
+            if front_distance is not None and front_distance <= Fdist:
+                print(f"[DEBUG] Target front distance reached: {front_distance} cm")
+                stop = True
+                break
+            
+            # If the front distance has decreased by 2 cm or more since the last pause, stop for 2 seconds
+            if previous_front is not None and front_distance is not None and (previous_front - front_distance) >= 3:
+                print(f"[DEBUG] Front distance decreased by 2 cm (from {previous_front} cm to {front_distance} cm). Pausing for 2 seconds.")
+                time.sleep(2)
+                previous_front = front_distance  # Update the reference
+            
+            # Get left sensor reading for correction
+            distance_left = ULTRASONIC_SENSOR_LEFT.get_cm()
+            print(f"[DEBUG] Left sensor reading: {distance_left} cm")
+            
+            # Apply correction based on left sensor reading relative to Ldist
+            if distance_left > Ldist + tolerance:
+                LEFT_MOTOR.set_power(power)
+                RIGHT_MOTOR.set_power(power - correction_offset)
+                correction = "left"
+            elif distance_left < Ldist - tolerance:
+                LEFT_MOTOR.set_power(power - correction_offset)
+                RIGHT_MOTOR.set_power(power)
+                correction = "right"
+            else:
+                LEFT_MOTOR.set_power(power)
+                RIGHT_MOTOR.set_power(power)
+                correction = "straight"
+            
+            print(f"[DEBUG] Correction applied: {correction} (Left sensor reading: {distance_left} cm)")
+            time.sleep(duration)
+            LEFT_MOTOR.set_power(0)
+            RIGHT_MOTOR.set_power(0)
+            time.sleep(0.3)
+        time.sleep(2)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
     time.sleep(0.1)
@@ -288,23 +289,28 @@ def navigate_to_base():
 def rotate_sensor_loop():
     """Continuously sweep sensor left/right."""
     global angle
+    global fires_extinguished
+    global stop_signal
+    global fire_detected
     COLOUR_MOTOR.reset_encoder()
     if in_room:
         print("[DEBUG] Fire scanning started...")
-
-    while fires_extinguished < 2 and not stop_signal and not fire_detected:
-        # Create a list that goes from 0 to 150 and then from 150 back to 0
-        angles = list(range(0, 152, 10)) + list(range(150, -1, -10))
-        for angle in angles:
-            if stop_signal:
-                break
-            rotate_sensor_to_position(angle, speed=25)
-            time.sleep(0.03)
+    while not stop_signal and fires_extinguished < 2:
+        while not stop_signal and not fire_detected:
+            # Create a list that goes from 0 to 150 and then from 150 back to 0
+            angles = list(range(0, 152, 10)) + list(range(150, -1, -10))
+            for angle in angles:
+                if stop_signal:
+                    break
+                rotate_sensor_to_position(angle, speed=25)
+                time.sleep(0.03)
+        time.sleep(2)
         
 def detect_fires_and_respond():
     global fires_extinguished
     global angle
     global fire_detected
+    global stop_signal
 
     while not stop_signal and fires_extinguished < 2:
         color_val = COLOUR_SENSOR.get_value()        
