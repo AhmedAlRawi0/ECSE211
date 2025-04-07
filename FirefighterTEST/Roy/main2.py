@@ -350,7 +350,7 @@ def rotate_sensor_loop():
                 rotate_sensor_to_position(angle, speed=25)
                 time.sleep(0.03)
         else:
-            time.sleep(1)
+            time.sleep(3)
             rotate_sensor_to_position(0, speed=25)
         
 def detect_fires_and_respond():
@@ -446,10 +446,9 @@ def main_mission():
     print("[DEBUG] Starting navigation inside fire room thread.")
     navigation_thread.start()
     
+    sweep_thread.join()
     detect_thread.join()
     navigation_thread.join()
-    stop_signal = True
-    sweep_thread.join()
     print("[DEBUG] All threads joined.")
 
     navigate_to_base()
