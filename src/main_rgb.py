@@ -330,25 +330,27 @@ def detect_fires_and_respond():
     global angle, fires_extinguished, stop_signal, fire_detected
 
     while not stop_signal and fires_extinguished < 2:
-        color_val = COLOUR_SENSOR.get_value()        
+        r, g, b = COLOUR_SENSOR.get_rgb()
+        detected_colour = rgb_to_colour([r, g, b])
+        print(f"[DEBUG] Sensor angle: {angle}°, Detected Colour: {detected_colour}")        
         
         #print(f"[DEBUG] Sensor angle: {angle}°, Color: {color_val}")
 
-        if color_val == 5:  # red
+        if detected_colour == Colour.RED:
 
             fire_detected = True
             LEFT_MOTOR.set_power(0)
             RIGHT_MOTOR.set_power(0)
             print(f"[DEBUG] Red detected at {angle}° - stopping motors")
             time.sleep(0.2)
-            rotate_sensor_to_position(150, speed=50)
+            rotate_sensor_to_position(140, speed=50)
             time.sleep(0.2)
             drop_sandbag_with_alignment(angle)
             fires_extinguished += 1
             time.sleep(1)
             fire_detected = False
 
-        elif color_val == 3:  # Green detected
+        elif detected_colour == Colour.GREEN:
             fire_detected = True
             LEFT_MOTOR.set_power(0)
             RIGHT_MOTOR.set_power(0)
