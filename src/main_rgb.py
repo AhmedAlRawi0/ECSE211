@@ -10,7 +10,6 @@ from utils.brick import (
 )
 from utils.sound import Sound
 from math import *
-from enum import Enum
 from colour_detection import rgb_to_colour, Colour
 
 
@@ -84,7 +83,7 @@ def drive_forward_with_correction(power=-20, Ldist=None, duration=0.1, Fdist=Non
     RIGHT_MOTOR.set_power(0)
     time.sleep(duration)
 
-def drive_forward_with_correction_room(power=-5, duration=0.1, Ldist=None, Fdist=None, tolerance=0.3, correction_offset=5):
+def drive_forward_with_correction_room(power=-8, duration=0.1, Ldist=None, Fdist=None, tolerance=0.3, correction_offset=3):
     global fires_extinguished
 
     if stop_signal:
@@ -103,7 +102,8 @@ def drive_forward_with_correction_room(power=-5, duration=0.1, Ldist=None, Fdist
         while not stop_signal and not fire_detected:
             
             if fires_extinguished >= 2:
-                power = -15    
+                power = -15
+                correction_offset = 5    
 
             front_distance = ULTRASONIC_SENSOR.get_cm()
             print(f"[DEBUG] Front sensor reading: {front_distance} cm")
@@ -133,11 +133,8 @@ def drive_forward_with_correction_room(power=-5, duration=0.1, Ldist=None, Fdist
             
             print(f"[DEBUG] Correction applied: {correction} (Left sensor reading: {distance_left} cm)")
             time.sleep(duration)
-            LEFT_MOTOR.set_power(0)
-            RIGHT_MOTOR.set_power(0)
-            time.sleep(duration)
 
-        time.sleep(1)
+        time.sleep(0.1)
 
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
@@ -166,6 +163,8 @@ def turn_left_90():
     print("[DEBUG] Turned left 90°.")
 
 def rotate_sensor_to_position(target, speed, threshold=2):
+    if stop_signal:
+        return
     current = COLOUR_MOTOR.get_position()
     while abs(current - target) > threshold and not stop_signal:
         if current < target:
@@ -190,6 +189,7 @@ def rotate_robot(angle):
     time.sleep(rotation_time)
     LEFT_MOTOR.set_power(0)
     RIGHT_MOTOR.set_power(0)
+    time.sleep(0.1)
     print("[DEBUG] Rotation complete.")
 
 def drop_sandbag_with_alignment(angle):
@@ -315,14 +315,14 @@ def rotate_sensor_loop():
         print("[DEBUG] Fire scanning started...")
     while not stop_signal and fires_extinguished < 2:
         if not fire_detected:
-            angles = list(range(0, 152, 10)) + list(range(150, -1, -10))
+            angles = list(range(0, 162, 10)) + list(range(160, -1, -10))
             for angle in angles:
                 if stop_signal or fire_detected:
                     break
                 rotate_sensor_to_position(angle, speed=25)
                 time.sleep(0.03)
         else:
-            time.sleep(3)
+            time.sleep(4)
             rotate_sensor_to_position(0, speed=25)
         
 def detect_fires_and_respond():
@@ -334,7 +334,7 @@ def detect_fires_and_respond():
         detected_colour = rgb_to_colour([r, g, b])
         print(f"[DEBUG] Sensor angle: {angle}°, Detected Colour: {detected_colour}")        
         
-        #print(f"[DEBUG] Sensor angle: {angle}°, Color: {color_val}")
+        print(f"[DEBUG] Sensor angle: {angle}°, Color: {detected_colour}")
 
         if detected_colour == Colour.RED:
 
@@ -350,20 +350,29 @@ def detect_fires_and_respond():
             time.sleep(1)
             fire_detected = False
 
-        elif detected_colour == Colour.GREEN:
-            fire_detected = True
-            LEFT_MOTOR.set_power(0)
-            RIGHT_MOTOR.set_power(0)
-            print(f"[DEBUG] Green detected at {angle}° - stopping motors for 2 seconds.")
-            time.sleep(0.2)
-            rotate_sensor_to_position(0, speed=50)
-            time.sleep(0.2)
-            avoid_green_sticker(angle)
-            time.sleep(1)
-            fire_detected = False
+        # elif detected_colour == Colour.GREEN:
+        #     fire_detected = True
+        #     LEFT_MOTOR.set_power(0)
+        #     RIGHT_MOTOR.set_power(0)
+        #     print(f"[DEBUG] Green detected at {angle}° - stopping motors for 2 seconds.")
+        #     time.sleep(0.2)
+        #     rotate_sensor_to_position(0, speed=50)
+        #     time.sleep(0.2)
+        #     avoid_green_sticker(angle)
+        #     time.sleep(1)
+        #     fire_detected = False
 
         time.sleep(0.1)
 
+def move_backwards(power = 20, duration = 1.8):
+    if stop_signal:
+        return 
+    LEFT_MOTOR.set_power(power)
+    RIGHT_MOTOR.set_power(power)
+    time.sleep(duration)
+    LEFT_MOTOR.set_power(0)
+    RIGHT_MOTOR.set_power(0)
+    time.sleep(duration)
 
 
 def navigate_to_fire_room():
@@ -373,7 +382,7 @@ def navigate_to_fire_room():
     time.sleep(0.2)
     turn_right_90()
     print("[DEBUG] Turned right 90°.")
-    drive_forward_with_correction(power=-20, duration=0.4, Ldist=51, Fdist=33)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=51, Fdist=33)
     time.sleep(0.2)
     turn_left_90()
     print("[DEBUG] Turned left 90°.")
@@ -392,37 +401,50 @@ def navigate_to_base():
     time.sleep(0.2)
     turn_left_90()
     print("[DEBUG] Turned left 90°.")
-    drive_forward_with_correction(power=-20, duration=0.4, Ldist=100, Fdist=8)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=100, Fdist=9)
     time.sleep(0.2)
     print("[DEBUG] Arrived at base.")
 
 def navigate_inside_fire_room():
+    global fires_extinguished
     print("[DEBUG] Navigation inside fire room started...")
-    drive_forward_with_correction_room(power=-5, duration=0.5, Ldist=76, Fdist=26)
+    drive_forward_with_correction_room(duration=0.5, Ldist=76, Fdist=32)
     time.sleep(0.2)
-    rotate_robot(-90)
+    turn_right_90()
+    time.sleep(0.2)
+    move_backwards()
     print("[DEBUG] rotated right 90°.")
-    drive_forward_with_correction_room(power=-5, duration=0.5, Ldist=31, Fdist=8)
+    drive_forward_with_correction_room(duration=0.5, Ldist=29, Fdist=9)
     time.sleep(0.2)
-    rotate_robot(90)
+    turn_left_90()
+    time.sleep(0.2)
+    move_backwards()
     print("[DEBUG] rotated left 90°.")
-    drive_forward_with_correction_room(power=-5, duration=0.5, Ldist=105, Fdist=8)
+    drive_forward_with_correction_room(duration=0.5, Ldist=105, Fdist=9)
     time.sleep(0.2)
-    rotate_robot(90)
+    turn_left_90()
+    time.sleep(0.2)
+    move_backwards()
     print("[DEBUG] rotated left 90°.")
-    drive_forward_with_correction_room(power=-5, duration=0.5, Ldist=105, Fdist=48)
+    drive_forward_with_correction_room(duration=0.5, Ldist=105, Fdist=52)
     time.sleep(0.2)
-    rotate_robot(90)
+    turn_left_90()
+    time.sleep(0.2)
+    move_backwards()
     print("[DEBUG] rotated left 90°.")
-    drive_forward_with_correction_room(power=-5, duration=0.5, Ldist=50, Fdist=70)
+    drive_forward_with_correction_room(duration=0.5, Ldist=50, Fdist=72)
     time.sleep(0.2)
-    rotate_robot(90)
+    turn_left_90()
+    time.sleep(0.2)
+    move_backwards()
     print("[DEBUG] rotated left 90°.")
-    drive_forward_with_correction_room(power=-5, duration=0.5, Ldist=28, Fdist=28)
+    drive_forward_with_correction_room(duration=0.5, Ldist=28, Fdist=28)
     time.sleep(0.2)
-    rotate_robot(-90)
+    turn_right_90()
+    time.sleep(0.2)
+    move_backwards()
     print("[DEBUG] rotated right 90°.")
-
+    fires_extinguished = 2
     print("[DEBUG] Navigation inside fire room complete.")
 
 def main_mission():
