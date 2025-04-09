@@ -81,7 +81,7 @@ def drive_forward_with_correction(power=-20, Ldist=None, duration=0.1, Fdist=Non
     RIGHT_MOTOR.set_power(0)
     time.sleep(duration)
 
-def drive_forward_with_correction_room(power=-5, duration=0.1, Ldist=None, Fdist=None, tolerance=0.3, correction_offset=2):
+def drive_forward_with_correction_room(power=-7, duration=0.1, Ldist=None, Fdist=None, tolerance=0.3, correction_offset=2):
     global fires_extinguished
 
     if stop_signal:
@@ -389,15 +389,15 @@ def navigate_to_base():
     print("[DEBUG] Navigation to base started...")
     # we can add a check for the orange threshold here, but i would recommend making it in the scan_and_extinguish_fires function
     # so when we scan it we trigger this
-    drive_forward_with_correction(power=-20, duration=0.5, Ldist=28, Fdist=52)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=30, Fdist=55)
     time.sleep(0.2)
     turn_right_90()
     print("[DEBUG] Turned right 90°.")
-    drive_forward_with_correction(power=-20, duration=0.5, Ldist=52, Fdist=9)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=55, Fdist=12)
     time.sleep(0.2)
     turn_left_90()
     print("[DEBUG] Turned left 90°.")
-    drive_forward_with_correction(power=-20, duration=0.5, Ldist=100, Fdist=9)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=102, Fdist=10)
     time.sleep(0.2)
     print("[DEBUG] Arrived at base.")
 
