@@ -404,7 +404,7 @@ def navigate_to_base():
 def navigate_inside_fire_room():
     global fires_extinguished
     print("[DEBUG] Navigation inside fire room started...")
-    drive_forward_with_correction_room(duration=0.5, Ldist=76, Fdist=30)
+    drive_forward_with_correction_room(duration=0.5, Ldist=76, Fdist=10)
     time.sleep(0.2)
     fires_extinguished = 2
     time.sleep(0.2)
