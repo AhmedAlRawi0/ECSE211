@@ -389,11 +389,11 @@ def navigate_to_base():
     print("[DEBUG] Navigation to base started...")
     # we can add a check for the orange threshold here, but i would recommend making it in the scan_and_extinguish_fires function
     # so when we scan it we trigger this
-    drive_forward_with_correction(power=-20, duration=0.5, Ldist=30, Fdist=55)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=30, Fdist=57)
     time.sleep(0.2)
     turn_right_90()
     print("[DEBUG] Turned right 90°.")
-    drive_forward_with_correction(power=-20, duration=0.5, Ldist=55, Fdist=12)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=55, Fdist=14)
     time.sleep(0.2)
     turn_left_90()
     print("[DEBUG] Turned left 90°.")
