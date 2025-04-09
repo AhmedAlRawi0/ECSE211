@@ -342,7 +342,7 @@ def detect_fires_and_respond():
             rotate_sensor_to_position(140, speed=50)
             time.sleep(0.2)
             drop_sandbag_with_alignment(angle)
-            fires_extinguished += 1
+            fires_extinguished = 2
             time.sleep(1)
             fire_detected = False
 
@@ -407,6 +407,7 @@ def navigate_inside_fire_room():
     drive_forward_with_correction_room(duration=0.5, Ldist=76, Fdist=30)
     time.sleep(0.2)
     rotate_robot(180)
+    
    
 
 def main_mission():
