@@ -81,7 +81,7 @@ def drive_forward_with_correction(power=-20, Ldist=None, duration=0.1, Fdist=Non
     RIGHT_MOTOR.set_power(0)
     time.sleep(duration)
 
-def drive_forward_with_correction_room(power=-7, duration=0.1, Ldist=None, Fdist=None, tolerance=0.3, correction_offset=2):
+def drive_forward_with_correction_room(power=-6, duration=0.1, Ldist=None, Fdist=None, tolerance=0.3, correction_offset=2):
     global fires_extinguished
 
     if stop_signal:
@@ -397,7 +397,7 @@ def navigate_to_base():
     time.sleep(0.2)
     turn_left_90()
     print("[DEBUG] Turned left 90°.")
-    drive_forward_with_correction(power=-20, duration=0.5, Ldist=102, Fdist=10)
+    drive_forward_with_correction(power=-20, duration=0.5, Ldist=99, Fdist=10)
     time.sleep(0.2)
     print("[DEBUG] Arrived at base.")
 
@@ -405,6 +405,8 @@ def navigate_inside_fire_room():
     global fires_extinguished
     print("[DEBUG] Navigation inside fire room started...")
     drive_forward_with_correction_room(duration=0.5, Ldist=76, Fdist=30)
+    time.sleep(0.2)
+    fires_extinguished = 2
     time.sleep(0.2)
     rotate_robot(180)
     
